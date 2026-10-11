@@ -1,0 +1,281 @@
+.btn {
+  padding: 11px 16px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: #5145cd;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #453ab5;
+}
+
+.btn-ghost {
+  background: white;
+  border-color: #e3e3ee;
+  color: #62627a;
+}
+
+.btn-ghost:hover {
+  background: #f7f7fb;
+}
+
+.btn:focus-visible,
+.tab:focus-visible,
+.field input:focus-visible,
+.field select:focus-visible,
+.field textarea:focus-visible,
+.search:focus-visible {
+  outline: 2px solid #7669e8;
+  outline-offset: 2px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tab {
+  padding: 9px 13px;
+  border: 1px solid #e8e8f1;
+  border-radius: 10px;
+  background: white;
+  color: #77778d;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: #efedff;
+  border-color: #dcd8ff;
+  color: #5145cd;
+  font-weight: 700;
+}
+
+.tab-count {
+  margin-left: 4px;
+  opacity: 0.7;
+}
+
+.search {
+  width: 240px;
+  max-width: 100%;
+  padding: 10px 13px;
+  border: 1px solid #e8e8f1;
+  border-radius: 10px;
+  background: white;
+  font-size: 12px;
+}
+
+.program-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 18px;
+}
+
+.program-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+}
+
+.program-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  padding: 5px 9px;
+  border-radius: 7px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.state {
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.state-perencanaan {
+  color: #8a8aa0;
+}
+
+.state-berjalan {
+  color: #df8c45;
+}
+
+.state-selesai {
+  color: #279d71;
+}
+
+.program-card h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.program-desc {
+  margin: 0;
+  color: #77778d;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.program-meta {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f5;
+}
+
+.program-meta dt {
+  font-size: 10px;
+  color: #a0a0b2;
+}
+
+.program-meta dd {
+  margin: 3px 0 0;
+  font-size: 12px;
+}
+
+.program-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.program-progress .progress-track {
+  flex: 1;
+  margin-top: 0;
+}
+
+.empty-state {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.empty-state h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.empty-state p {
+  margin: 0 0 8px;
+  color: #8a8aa0;
+  font-size: 12px;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(36, 36, 59, 0.45);
+}
+
+.modal {
+  width: 100%;
+  max-width: 540px;
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 26px;
+  border-radius: 16px;
+  background: white;
+}
+
+.modal h2 {
+  margin: 0 0 20px;
+  font-size: 18px;
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+}
+
+.field {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.field > span {
+  font-size: 11px;
+  font-weight: 600;
+  color: #62627a;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #e3e3ee;
+  border-radius: 10px;
+  background: white;
+  color: #24243b;
+  font-size: 13px;
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.form-error {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fff0ef;
+  color: #c4514d;
+  font-size: 12px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+@media (max-width: 700px) {
+  .field-row {
+    grid-template-columns: 1fr;
+  }
+
+  .search {
+    width: 100%;
+  }
+}
