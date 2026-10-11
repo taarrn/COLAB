@@ -551,3 +551,22 @@
     gap: 9px;
   }
 }
+
+/* Tambahan tahap 2 */
+.green-fill {
+  background: #3dbb88;
+}
+
+.status-purple {
+  color: #6556d9;
+}
+
+.menu-item.soon {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.menu-item.soon:hover {
+  background: transparent;
+  color: #77778d;
+}
