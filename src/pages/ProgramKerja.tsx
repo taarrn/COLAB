@@ -1,22 +1,17 @@
 import { useEffect, useState } from 'react'
 import './ProgramKerja.css'
 import ProgramForm from '../components/ProgramForm'
-import { statusList, toneOf } from '../data'
-import type { Program, Status } from '../data'
+import { anggotaById, formatTanggal, hitungProgres, statusList, toneOf } from '../data'
+import type { Program, Status, Tugas } from '../data'
 
 interface Props {
   programs: Program[]
+  tugas: Tugas[]
   onAdd: (data: Omit<Program, 'id'>) => void
+  onOpen: (id: number) => void
 }
 
-const formatTanggal = (iso: string) =>
-  new Date(iso + 'T00:00:00').toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
-
-export default function ProgramKerja({ programs, onAdd }: Props) {
+export default function ProgramKerja({ programs, tugas, onAdd, onOpen }: Props) {
   const [showForm, setShowForm] = useState(false)
   const [filter, setFilter] = useState<Status | 'Semua'>('Semua')
   const [query, setQuery] = useState('')
@@ -29,14 +24,17 @@ export default function ProgramKerja({ programs, onAdd }: Props) {
     return () => window.removeEventListener('keydown', onKey)
   }, [showForm])
 
-  const visible = programs.filter(
-    (p) =>
-      (filter === 'Semua' || p.status === filter) &&
-      p.nama.toLowerCase().includes(query.trim().toLowerCase()),
+  // Progres dan status dihitung dari tugas tiap program
+  const rows = programs.map((p) => ({ program: p, ...hitungProgres(p.id, tugas) }))
+
+  const visible = rows.filter(
+    (r) =>
+      (filter === 'Semua' || r.status === filter) &&
+      r.program.nama.toLowerCase().includes(query.trim().toLowerCase()),
   )
 
   const countOf = (s: Status | 'Semua') =>
-    s === 'Semua' ? programs.length : programs.filter((p) => p.status === s).length
+    s === 'Semua' ? rows.length : rows.filter((r) => r.status === s).length
 
   return (
     <>
@@ -90,13 +88,25 @@ export default function ProgramKerja({ programs, onAdd }: Props) {
         </div>
       ) : (
         <div className="program-grid">
-          {visible.map((p) => {
+          {visible.map(({ program: p, progres, status, total, selesai }) => {
             const tone = toneOf(p.departemen)
             return (
-              <article className="panel program-card" key={p.id}>
+                            <article
+                className="panel program-card clickable"
+                key={p.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => onOpen(p.id)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    onOpen(p.id)
+                  }
+                }}
+              >
                 <div className="program-card-top">
                   <span className={`badge ${tone}`}>{p.departemen}</span>
-                  <span className={`state state-${p.status.toLowerCase()}`}>{p.status}</span>
+                  <span className={`state state-${status.toLowerCase()}`}>{status}</span>
                 </div>
 
                 <h3>{p.nama}</h3>
@@ -109,23 +119,26 @@ export default function ProgramKerja({ programs, onAdd }: Props) {
                       {formatTanggal(p.mulai)} – {formatTanggal(p.selesai)}
                     </dd>
                   </div>
-                  {p.penanggungJawab && (
-                    <div>
-                      <dt>Penanggung jawab</dt>
-                      <dd>{p.penanggungJawab}</dd>
-                    </div>
-                  )}
+                   <div>
+                    <dt>Penanggung jawab</dt>
+                    <dd>{anggotaById(p.pjId).nama}</dd>
+                  </div>
                 </dl>
 
                 <div className="program-progress">
                   <div className="progress-track">
                     <div
                       className={`progress-fill ${tone}-fill`}
-                      style={{ width: `${p.progres}%` }}
+                      style={{ width: `${progres}%` }}
                     />
                   </div>
-                  <span className={`status status-${tone}`}>{p.progres}%</span>
+                  <span className={`status status-${tone}`}>{progres}%</span>
                 </div>
+                <p className="program-tasks">
+                  {total === 0
+                    ? 'Belum ada tugas'
+                    : `${selesai} dari ${total} tugas selesai`}
+                </p>
               </article>
             )
           })}
