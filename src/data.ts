@@ -24,6 +24,7 @@ export interface Tugas {
   programId: number
   anggotaId: number // satu tugas dipegang satu anggota
   prioritas: Prioritas
+  mulai?: string // format YYYY-MM-DD, opsional; kalau kosong tugas hanya tampil di tanggal tenggat
   tenggat: string // format YYYY-MM-DD, boleh kosong
   bobot: number // bobot tugas terhadap program, dalam persen (diatur PJ)
   selesai: boolean
@@ -206,6 +207,33 @@ export const initialTugas: Tugas[] = [
   { id: 12, nama: 'Dokumentasi kegiatan bulanan', programId: 4, anggotaId: 8, prioritas: 'Rendah', tenggat: '2026-10-10', bobot: 50, selesai: true },
   { id: 13, nama: 'Publikasi pelatihan', programId: 2, anggotaId: 8, prioritas: 'Sedang', tenggat: '2026-11-01', bobot: 20, selesai: false },
 ]
+
+// ---------- Helper kalender ----------
+
+// Tanggal lokal -> 'YYYY-MM-DD' (jangan pakai toISOString, bisa geser sehari karena zona waktu)
+export const keyTanggal = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
+export const hariIniKey = () => keyTanggal(new Date())
+
+export type FaseProgram = 'Akan datang' | 'Berlangsung' | 'Berakhir'
+
+// Fase program dihitung dari tanggal, jadi berakhir otomatis tanpa perlu disimpan
+export function faseProgram(program: Program, hariIni: string): FaseProgram {
+  if (hariIni < program.mulai) return 'Akan datang'
+  if (hariIni > program.selesai) return 'Berakhir'
+  return 'Berlangsung'
+}
+
+// Rentang tampil tugas di kalender. Tugas yang belum selesai dan lewat tenggat
+// terus diperpanjang sampai hari ini (tidak berakhir otomatis), berhenti kalau sudah di-Done.
+export function rentangTugas(t: Tugas, hariIni: string): { awal: string; akhir: string } | null {
+  if (!t.tenggat && !t.mulai) return null
+  const akhirAsli = t.tenggat || (t.mulai as string)
+  const awal = t.mulai && t.mulai <= akhirAsli ? t.mulai : akhirAsli
+  const akhir = !t.selesai && hariIni > akhirAsli ? hariIni : akhirAsli
+  return { awal, akhir }
+}
 
 // Key diberi v2 karena bentuk datanya berubah (ada pjId, anggotaId, bobot)
 const PROGRAM_KEY = 'kolab:programs:v2'

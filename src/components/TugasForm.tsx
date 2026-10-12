@@ -8,6 +8,8 @@ interface Props {
   initial?: Tugas // diisi saat mengedit tugas
   defaultProgramId?: number
   defaultAnggotaId?: number
+  defaultMulai?: string // dipakai kalender: tanggal yang diklik
+  defaultTenggat?: string
   lockProgram?: boolean // true = program tidak bisa diganti (dipakai di halaman detail)
   onSubmit: (data: TugasInput) => void
   onCancel: () => void
@@ -18,6 +20,8 @@ export default function TugasForm({
   initial,
   defaultProgramId,
   defaultAnggotaId,
+  defaultMulai,
+  defaultTenggat,
   lockProgram = false,
   onSubmit,
   onCancel,
@@ -33,7 +37,8 @@ export default function TugasForm({
     initial?.anggotaId ?? defaultAnggotaId ?? programs.find((p) => p.id === awalProgramId)?.pjId ?? daftarAnggota[0].id,
   )
   const [prioritas, setPrioritas] = useState<Prioritas>(initial?.prioritas ?? 'Sedang')
-  const [tenggat, setTenggat] = useState(initial?.tenggat ?? '')
+  const [mulai, setMulai] = useState(initial?.mulai ?? defaultMulai ?? '')
+  const [tenggat, setTenggat] = useState(initial?.tenggat ?? defaultTenggat ?? '')
   const [bobot, setBobot] = useState(String(initial?.bobot ?? 0))
   const [error, setError] = useState('')
 
@@ -50,6 +55,12 @@ export default function TugasForm({
       return setError('Tenggat harus berada dalam jadwal program.')
     }
 
+    if (mulai && !tenggat) return setError('Isi tenggat kalau tanggal mulai diisi.')
+    if (mulai && tenggat && mulai > tenggat) return setError('Tanggal mulai tidak boleh setelah tenggat.')
+    if (mulai && (mulai < program.mulai || mulai > program.selesai)) {
+      return setError('Tanggal mulai harus berada dalam jadwal program.')
+    }
+
     const angkaBobot = Number(bobot)
     if (Number.isNaN(angkaBobot) || angkaBobot < 0 || angkaBobot > 100) {
       return setError('Bobot harus berupa angka 0 sampai 100.')
@@ -60,6 +71,7 @@ export default function TugasForm({
       programId,
       anggotaId,
       prioritas,
+      mulai: mulai || undefined,
       tenggat,
       bobot: Math.round(angkaBobot),
     })
@@ -112,14 +124,25 @@ export default function TugasForm({
         </select>
       </label>
 
+      <label className="field">
+        <span>Prioritas</span>
+        <select value={prioritas} onChange={(e) => setPrioritas(e.target.value as Prioritas)}>
+          {prioritasList.map((p) => (
+            <option key={p}>{p}</option>
+          ))}
+        </select>
+      </label>
+
       <div className="field-row">
         <label className="field">
-          <span>Prioritas</span>
-          <select value={prioritas} onChange={(e) => setPrioritas(e.target.value as Prioritas)}>
-            {prioritasList.map((p) => (
-              <option key={p}>{p}</option>
-            ))}
-          </select>
+          <span>Mulai (opsional)</span>
+          <input
+            type="date"
+            value={mulai}
+            min={program?.mulai}
+            max={program?.selesai}
+            onChange={(e) => setMulai(e.target.value)}
+          />
         </label>
 
         <label className="field">
