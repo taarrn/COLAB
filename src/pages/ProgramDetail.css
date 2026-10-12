@@ -1,0 +1,338 @@
+/* Kartu program di daftar bisa diklik */
+.program-card.clickable {
+  cursor: pointer;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.program-card.clickable:hover {
+  box-shadow: 0 8px 22px rgba(81, 69, 205, 0.12);
+  transform: translateY(-2px);
+}
+
+.program-card.clickable:focus-visible {
+  outline: 2px solid #7669e8;
+  outline-offset: 2px;
+}
+
+.detail-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-danger {
+  background: white;
+  border-color: #f3c9c6;
+  color: #c4514d;
+}
+
+.btn-danger:hover {
+  background: #fff0ef;
+}
+
+.btn-small {
+  padding: 7px 12px;
+}
+
+.muted {
+  color: #8a8aa0;
+  font-weight: 400;
+}
+
+.form-hint {
+  margin: 0;
+  color: #8a8aa0;
+  font-size: 11px;
+}
+
+.detail-summary {
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+  margin-bottom: 26px;
+}
+
+.detail-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding-top: 14px;
+  border-top: 1px solid #f0f0f5;
+}
+
+.detail-meta dt {
+  font-size: 10px;
+  color: #a0a0b2;
+}
+
+.detail-meta dd {
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.section-head h2 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0;
+  color: #77778d;
+  font-size: 11px;
+}
+
+.legend .dot + .dot,
+.legend .dot:not(:first-child) {
+  margin-left: 10px;
+}
+
+.dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.dot.core {
+  background: #5145cd;
+}
+
+.dot.helper {
+  background: #d6478a;
+}
+
+.bobot-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #eef9f3;
+  color: #279d71;
+  font-size: 12px;
+}
+
+.bobot-bar.warn {
+  background: #fff6ec;
+  color: #b9742f;
+}
+
+.detail-note {
+  margin: 0 0 14px;
+  color: #8a8aa0;
+  font-size: 12px;
+}
+
+.member {
+  --accent: #5145cd;
+  --accent-soft: #efedff;
+  display: grid;
+  gap: 14px;
+  margin-bottom: 14px;
+  padding: 20px;
+  border-left: 4px solid var(--accent);
+}
+
+.member-helper {
+  --accent: #d6478a;
+  --accent-soft: #fdeef5;
+}
+
+.member .progress-fill {
+  background: var(--accent);
+}
+
+.member-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.member-avatar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.member-id {
+  flex: 1;
+  min-width: 0;
+}
+
+.member-id strong {
+  font-size: 13px;
+}
+
+.member-id p {
+  margin: 3px 0 0;
+  color: #8a8aa0;
+  font-size: 11px;
+}
+
+.pj-tag {
+  margin-left: 8px;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: #24243b;
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.role-tag {
+  padding: 5px 9px;
+  border-radius: 7px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.member-stats {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.member-beban {
+  display: grid;
+  gap: 2px;
+  min-width: 56px;
+}
+
+.member-beban span {
+  color: #a0a0b2;
+  font-size: 10px;
+}
+
+.member-beban strong {
+  font-size: 15px;
+}
+
+.member-stats .program-progress {
+  flex: 1;
+  margin-top: 0;
+}
+
+.member-percent {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.member-empty {
+  margin: 0;
+  color: #a0a0b2;
+  font-size: 12px;
+}
+
+.member-tasks {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 10px 0 0;
+  border-top: 1px solid #f0f0f5;
+  list-style: none;
+}
+
+.member-tasks li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  font-size: 12px;
+}
+
+.task-state {
+  width: 16px;
+  color: #a0a0b2;
+  text-align: center;
+}
+
+.task-state.done {
+  color: #279d71;
+  font-weight: 700;
+}
+
+.member-task-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.bobot-input {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #77778d;
+}
+
+.bobot-input input {
+  width: 58px;
+  padding: 6px 8px;
+  border: 1px solid #e3e3ee;
+  border-radius: 8px;
+  font-size: 12px;
+  text-align: right;
+}
+
+.bobot-input input:focus-visible {
+  outline: 2px solid #7669e8;
+  outline-offset: 1px;
+}
+
+.bobot-read {
+  color: #77778d;
+  font-weight: 600;
+}
+
+/* Tombol kecil edit / hapus tugas (khusus PJ) */
+.mini-btn {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #a0a0b2;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.mini-btn:hover {
+  background: #f0eefc;
+  color: #5b4bd6;
+}
+
+.mini-btn.danger:hover {
+  background: #fff0ef;
+  color: #c4514d;
+}
+
+.mini-btn:focus-visible {
+  outline: 2px solid #7669e8;
+  outline-offset: 2px;
+}

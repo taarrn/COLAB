@@ -570,3 +570,33 @@
   background: transparent;
   color: #77778d;
 }
+
+/* Pilihan "Masuk sebagai" di sidebar */
+.user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-info label {
+  display: block;
+  color: #a0a0b2;
+  font-size: 10px;
+}
+
+.user-info select {
+  width: 100%;
+  margin: 3px 0;
+  padding: 5px 6px;
+  border: 1px solid #e3e3ee;
+  border-radius: 8px;
+  background: white;
+  color: #24243b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.user-info p {
+  margin: 0;
+  color: #8a8aa0;
+  font-size: 10px;
+}

@@ -1,22 +1,27 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { departemenList } from '../data'
+import { daftarAnggota, departemenList, singkatDivisi } from '../data'
 import type { Program } from '../data'
 
 type FormData = Omit<Program, 'id'>
 
 interface Props {
+  initial?: Program // diisi saat mengedit program
   onSubmit: (data: FormData) => void
   onCancel: () => void
 }
 
-export default function ProgramForm({ onSubmit, onCancel }: Props) {
-  const [nama, setNama] = useState('')
-  const [departemen, setDepartemen] = useState(departemenList[0])
-  const [penanggungJawab, setPenanggungJawab] = useState('')
-  const [mulai, setMulai] = useState('')
-  const [selesai, setSelesai] = useState('')
-  const [deskripsi, setDeskripsi] = useState('')
+export default function ProgramForm({ initial, onSubmit, onCancel }: Props) {
+  const [nama, setNama] = useState(initial?.nama ?? '')
+  const [departemen, setDepartemen] = useState(initial?.departemen ?? departemenList[0])
+  const [pjId, setPjId] = useState(
+    initial?.pjId ??
+      daftarAnggota.find((a) => a.divisi === departemenList[0])?.id ??
+      daftarAnggota[0].id,
+  )
+  const [mulai, setMulai] = useState(initial?.mulai ?? '')
+  const [selesai, setSelesai] = useState(initial?.selesai ?? '')
+  const [deskripsi, setDeskripsi] = useState(initial?.deskripsi ?? '')
   const [error, setError] = useState('')
 
   const handleSubmit = (e: FormEvent) => {
@@ -31,12 +36,10 @@ export default function ProgramForm({ onSubmit, onCancel }: Props) {
     onSubmit({
       nama: nama.trim(),
       departemen,
-      penanggungJawab: penanggungJawab.trim(),
+      pjId,
       mulai,
       selesai,
       deskripsi: deskripsi.trim(),
-      progres: 0,
-      status: 'Perencanaan',
     })
   }
 
@@ -63,11 +66,14 @@ export default function ProgramForm({ onSubmit, onCancel }: Props) {
         </label>
 
         <label className="field">
-          <span>Penanggung jawab (opsional)</span>
-          <input
-            value={penanggungJawab}
-            onChange={(e) => setPenanggungJawab(e.target.value)}
-          />
+          <span>Penanggung jawab</span>
+          <select value={pjId} onChange={(e) => setPjId(Number(e.target.value))}>
+            {daftarAnggota.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.nama} · {singkatDivisi(a.divisi)}
+              </option>
+            ))}
+          </select>
         </label>
       </div>
 
@@ -109,7 +115,7 @@ export default function ProgramForm({ onSubmit, onCancel }: Props) {
           Batal
         </button>
         <button type="submit" className="btn btn-primary">
-          Simpan program
+          {initial ? 'Simpan perubahan' : 'Simpan program'}
         </button>
       </div>
     </form>

@@ -1,4 +1,7 @@
-export type Page = 'dashboard' | 'program'
+import { daftarAnggota, singkatDivisi } from '../data'
+import type { Anggota } from '../data'
+
+export type Page = 'dashboard' | 'program' | 'tugas'
 
 interface MenuItem {
   label: string
@@ -9,7 +12,7 @@ interface MenuItem {
 const items: MenuItem[] = [
   { label: 'Dashboard', icon: '▦', page: 'dashboard' },
   { label: 'Program Kerja', icon: '▤', page: 'program' },
-  { label: 'Manajemen Tugas', icon: '☷' },
+  { label: 'Manajemen Tugas', icon: '☷', page: 'tugas' },
   { label: 'Kalender Kegiatan', icon: '▦' },
   { label: 'Laporan Progres', icon: '▥' },
 ]
@@ -17,9 +20,11 @@ const items: MenuItem[] = [
 interface Props {
   page: Page
   onNavigate: (page: Page) => void
+  user: Anggota
+  onChangeUser: (id: number) => void
 }
 
-export default function Sidebar({ page, onNavigate }: Props) {
+export default function Sidebar({ page, onNavigate, user, onChangeUser }: Props) {
   return (
     <aside className="sidebar">
       <div className="logo">
@@ -51,10 +56,21 @@ export default function Sidebar({ page, onNavigate }: Props) {
       </nav>
 
       <div className="sidebar-bottom">
-        <div className="profile-avatar">A</div>
-        <div>
-          <strong>Admin Organisasi</strong>
-          <p>Pengurus HMIF</p>
+        <div className="profile-avatar">{user.nama.charAt(0)}</div>
+        <div className="user-info">
+          <label htmlFor="user-select">Masuk sebagai</label>
+          <select
+            id="user-select"
+            value={user.id}
+            onChange={(e) => onChangeUser(Number(e.target.value))}
+          >
+            {daftarAnggota.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.nama}
+              </option>
+            ))}
+          </select>
+          <p>{singkatDivisi(user.divisi)}</p>
         </div>
       </div>
     </aside>

@@ -1,0 +1,95 @@
+.task-list {
+  padding: 6px 20px;
+}
+
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid #f0f0f5;
+}
+
+.task-row:last-child {
+  border-bottom: none;
+}
+
+.task-checkbox {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: #5145cd;
+  cursor: pointer;
+}
+
+.task-checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.task-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-main strong {
+  font-size: 13px;
+}
+
+.task-main p {
+  margin: 4px 0 0;
+  color: #8a8aa0;
+  font-size: 11px;
+}
+
+.task-row.done .task-main strong {
+  color: #a0a0b2;
+  text-decoration: line-through;
+}
+
+.task-edit,
+.task-delete {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #a0a0b2;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.task-edit:hover {
+  background: #f0eefc;
+  color: #5b4bd6;
+}
+
+.task-delete:hover {
+  background: #fff0ef;
+  color: #c4514d;
+}
+
+.task-edit:focus-visible,
+.task-delete:focus-visible,
+.task-checkbox:focus-visible {
+  outline: 2px solid #7669e8;
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.program-tasks {
+  margin: -4px 0 0;
+  color: #8a8aa0;
+  font-size: 11px;
+}
+
+.panel-empty {
+  margin: 8px 0;
+  color: #8a8aa0;
+  font-size: 12px;
+}

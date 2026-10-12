@@ -1,18 +1,23 @@
-import type { Program } from '../data'
-import { toneOf } from '../data'
+import type { Program, Tugas } from '../data'
+import { hitungProgres, toneOf } from '../data'
 import type { Page } from '../components/Sidebar'
 
 interface Props {
   programs: Program[]
+  tugas: Tugas[]
   onNavigate: (page: Page) => void
 }
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
-export default function Dashboard({ programs, onNavigate }: Props) {
-  const rataRata = programs.length
-    ? Math.round(programs.reduce((sum, p) => sum + p.progres, 0) / programs.length)
+const prioritasClass = { Tinggi: 'high', Sedang: 'medium', Rendah: 'low' } as const
+
+export default function Dashboard({ programs, tugas, onNavigate }: Props) {
+  const hasil = programs.map((p) => ({ program: p, ...hitungProgres(p.id, tugas) }))
+  const rataRata = hasil.length
+    ? Math.round(hasil.reduce((sum, h) => sum + h.progres, 0) / hasil.length)
     : 0
+  const tugasBerjalan = tugas.filter((t) => !t.selesai).length
 
   return (
     <>
@@ -50,7 +55,7 @@ export default function Dashboard({ programs, onNavigate }: Props) {
             <span>Tugas Berjalan</span>
             <span className="stat-icon orange">☷</span>
           </div>
-          <h3>08</h3>
+          <h3>{pad(tugasBerjalan)}</h3>
           <p>Tugas perlu diselesaikan</p>
         </div>
 
@@ -87,7 +92,7 @@ export default function Dashboard({ programs, onNavigate }: Props) {
             </button>
           </div>
 
-          {programs.slice(0, 3).map((p, i) => {
+          {hasil.slice(0, 3).map(({ program: p, progres }, i) => {
             const tone = toneOf(p.departemen)
             return (
               <div className="program-item" key={p.id}>
@@ -98,11 +103,11 @@ export default function Dashboard({ programs, onNavigate }: Props) {
                   <div className="progress-track">
                     <div
                       className={`progress-fill ${tone}-fill`}
-                      style={{ width: `${p.progres}%` }}
+                      style={{ width: `${progres}%` }}
                     />
                   </div>
                 </div>
-                <span className={`status status-${tone}`}>{p.progres}%</span>
+                <span className={`status status-${tone}`}>{progres}%</span>
               </div>
             )
           })}
@@ -114,35 +119,25 @@ export default function Dashboard({ programs, onNavigate }: Props) {
               <h3>Tugas Terbaru</h3>
               <p>Daftar tugas yang perlu diperhatikan.</p>
             </div>
-            <button className="text-button">Lihat semua →</button>
+            <button className="text-button" onClick={() => onNavigate('tugas')}>
+              Lihat semua →
+            </button>
           </div>
 
-          <div className="task-item">
-            <span className="task-check">✓</span>
-            <div className="task-info">
-              <strong>Menyusun proposal kegiatan</strong>
-              <p>Informatika Menyapa</p>
-            </div>
-            <span className="priority high">Tinggi</span>
-          </div>
+          {tugas.length === 0 && <p className="panel-empty">Belum ada tugas.</p>}
 
-          <div className="task-item">
-            <span className="task-check empty"></span>
-            <div className="task-info">
-              <strong>Menghubungi pemateri</strong>
-              <p>Pelatihan Internal</p>
+          {tugas.slice(0, 3).map((t) => (
+            <div className="task-item" key={t.id}>
+              <span className={t.selesai ? 'task-check' : 'task-check empty'}>
+                {t.selesai ? '✓' : ''}
+              </span>
+              <div className="task-info">
+                <strong>{t.nama}</strong>
+                <p>{programs.find((p) => p.id === t.programId)?.nama ?? 'Program dihapus'}</p>
+              </div>
+              <span className={`priority ${prioritasClass[t.prioritas]}`}>{t.prioritas}</span>
             </div>
-            <span className="priority medium">Sedang</span>
-          </div>
-
-          <div className="task-item">
-            <span className="task-check empty"></span>
-            <div className="task-info">
-              <strong>Menyiapkan desain poster</strong>
-              <p>Dies Natalis Informatika</p>
-            </div>
-            <span className="priority low">Rendah</span>
-          </div>
+          ))}
         </div>
       </section>
     </>
