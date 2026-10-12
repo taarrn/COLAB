@@ -1,0 +1,565 @@
+/* ===== Laporan Progres ===== */
+/* Memakai kelas yang sudah ada: .topbar .toolbar .tabs .tab .btn .panel .stats .stat-card
+   .badge .status .empty-state dan warna .purple/.orange/.blue/.green dari App.css & ProgramKerja.css */
+
+.lp-topbar {
+  flex-wrap: wrap;
+}
+
+.lp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lp-select {
+  max-width: 100%;
+  padding: 10px 13px;
+  border: 1px solid #e8e8f1;
+  border-radius: 10px;
+  background: white;
+  color: #24243b;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.lp-select:focus-visible {
+  outline: 2px solid #7669e8;
+  outline-offset: 2px;
+}
+
+/* ---------- Banner ringkasan ---------- */
+.lp-hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 28px 34px;
+  margin-bottom: 22px;
+  border-radius: 17px;
+  background: linear-gradient(110deg, #5145cd, #7669e8);
+  color: white;
+}
+
+.lp-hero::after {
+  content: '%';
+  position: absolute;
+  right: 210px;
+  bottom: -105px;
+  font-size: 260px;
+  font-weight: 900;
+  line-height: 1;
+  opacity: 0.08;
+  pointer-events: none;
+}
+
+.lp-hero > div {
+  position: relative;
+  z-index: 1;
+}
+
+.lp-hero-label {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  opacity: 0.75;
+}
+
+.lp-hero h2 {
+  margin: 12px 0 8px;
+  font-size: 23px;
+}
+
+.lp-hero-text {
+  max-width: 520px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  opacity: 0.88;
+}
+
+.lp-hero-score {
+  min-width: 200px;
+  text-align: right;
+}
+
+.lp-hero-score strong {
+  display: block;
+  font-size: 46px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.lp-hero-score span {
+  display: block;
+  margin: 8px 0 12px;
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.lp-hero-bar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.lp-hero-bar div {
+  height: 100%;
+  border-radius: inherit;
+  background: white;
+}
+
+/* ---------- Kartu statistik: warna merah tambahan ---------- */
+.stat-icon.red {
+  background: #fff0ef;
+  color: #d96a66;
+}
+
+/* ---------- Susunan panel ---------- */
+.lp-grid {
+  display: grid;
+  gap: 20px;
+  margin-bottom: 22px;
+}
+
+.lp-grid-a {
+  grid-template-columns: 0.85fr 1.15fr;
+}
+
+.lp-grid-b {
+  grid-template-columns: 1fr 1fr;
+}
+
+.lp-section {
+  margin-bottom: 22px;
+}
+
+/* ---------- Batang progres ---------- */
+.lp-bar {
+  position: relative;
+  flex: 1;
+  min-width: 60px;
+  height: 8px;
+  border-radius: 10px;
+  background: #efeff6;
+}
+
+.lp-tick {
+  position: absolute;
+  top: -4px;
+  width: 2px;
+  height: 16px;
+  margin-left: -1px;
+  border-radius: 2px;
+  background: #24243b;
+  opacity: 0.55;
+}
+
+/* ---------- Donat status tugas ---------- */
+.lp-donut-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 26px;
+}
+
+.lp-donut {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.lp-donut::before {
+  content: '';
+  position: absolute;
+  inset: 20px;
+  border-radius: 50%;
+  background: white;
+}
+
+.lp-donut-center {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-content: center;
+  text-align: center;
+}
+
+.lp-donut-center strong {
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.lp-donut-center span {
+  margin-top: 4px;
+  font-size: 10px;
+  color: #9999ad;
+}
+
+.lp-legend {
+  display: grid;
+  flex: 1;
+  gap: 12px;
+  min-width: 160px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lp-legend li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+  color: #62627a;
+}
+
+.lp-legend b {
+  margin-left: auto;
+  color: #24243b;
+}
+
+.lp-dot {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.lp-dot.done {
+  background: #3dbb88;
+}
+
+.lp-dot.progress {
+  background: #7669e8;
+}
+
+.lp-dot.late {
+  background: #e4736f;
+}
+
+/* ---------- Progres per departemen ---------- */
+.lp-dept {
+  display: grid;
+  gap: 20px;
+}
+
+.lp-row-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 9px;
+}
+
+.lp-row-head strong {
+  font-size: 12px;
+}
+
+.lp-row-meta {
+  margin: 8px 0 0;
+  font-size: 10px;
+  color: #a0a0b2;
+}
+
+/* ---------- Tabel rincian program ---------- */
+.lp-table-wrap {
+  overflow-x: auto;
+}
+
+.lp-table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+}
+
+.lp-table th {
+  padding: 0 12px 12px;
+  border-bottom: 1px solid #f0f0f5;
+  color: #a0a0b2;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.lp-table td {
+  padding: 16px 12px;
+  border-bottom: 1px solid #f0f0f5;
+  font-size: 12px;
+  vertical-align: middle;
+}
+
+.lp-table tbody tr:last-child td {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.lp-table th:first-child,
+.lp-table td:first-child {
+  padding-left: 0;
+}
+
+.lp-table th:last-child,
+.lp-table td:last-child {
+  padding-right: 0;
+}
+
+.lp-prog-name strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.lp-prog-name .badge {
+  display: inline-block;
+}
+
+.lp-muted {
+  margin-top: 4px;
+  font-size: 10px;
+  color: #a0a0b2;
+}
+
+.lp-late {
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #d96a66;
+}
+
+.lp-cell-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 180px;
+}
+
+.lp-cell-progress .status {
+  min-width: 34px;
+  text-align: right;
+}
+
+.lp-note {
+  margin: 16px 0 0;
+  font-size: 10px;
+  line-height: 1.6;
+  color: #a0a0b2;
+}
+
+/* ---------- Label kondisi ---------- */
+.lp-pill {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 7px;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.lp-pill.ok {
+  background: #e8f7ef;
+  color: #279d71;
+}
+
+.lp-pill.warn {
+  background: #fff5e8;
+  color: #d89445;
+}
+
+.lp-pill.bad {
+  background: #fff0ef;
+  color: #d96a66;
+}
+
+.lp-pill.neutral {
+  background: #f1f1f7;
+  color: #8a8aa0;
+}
+
+.lp-pill-sm {
+  margin-left: 8px;
+  padding: 3px 7px;
+  font-size: 9px;
+  vertical-align: middle;
+}
+
+/* ---------- Daftar (perlu perhatian & anggota) ---------- */
+.lp-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lp-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid #f0f0f5;
+}
+
+.lp-list li:first-child {
+  padding-top: 0;
+}
+
+.lp-list li:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.lp-item-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.lp-item-main strong {
+  display: block;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.lp-item-main p {
+  margin: 4px 0 0;
+  font-size: 10px;
+  color: #a0a0b2;
+}
+
+.lp-alert-dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.lp-alert-dot.bad {
+  background: #e4736f;
+}
+
+.lp-alert-dot.warn {
+  background: #e9a15e;
+}
+
+.lp-avatar {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.lp-member-progress {
+  display: grid;
+  gap: 6px;
+  width: 120px;
+  flex-shrink: 0;
+  font-size: 10px;
+  text-align: right;
+  color: #8a8aa0;
+}
+
+.lp-empty {
+  margin: 0;
+  padding: 24px 0 8px;
+  text-align: center;
+  font-size: 12px;
+  color: #8a8aa0;
+}
+
+/* ---------- Responsif ---------- */
+@media (max-width: 1150px) {
+  .lp-grid-a,
+  .lp-grid-b {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .lp-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 24px;
+  }
+
+  .lp-hero h2 {
+    font-size: 20px;
+  }
+
+  .lp-hero-score {
+    width: 100%;
+    text-align: left;
+  }
+
+  .lp-select {
+    width: 100%;
+  }
+
+  .lp-member-progress {
+    width: 90px;
+  }
+}
+
+/* ---------- Cetak ---------- */
+@page {
+  margin: 14mm;
+}
+
+@media print {
+  .sidebar,
+  .footer,
+  .no-print {
+    display: none !important;
+  }
+
+  .app {
+    display: block;
+    background: white;
+  }
+
+  .main-content {
+    padding: 0;
+  }
+
+  .lp-hero,
+  .lp-bar,
+  .lp-donut,
+  .lp-pill,
+  .lp-dot,
+  .lp-alert-dot,
+  .progress-fill {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .panel,
+  .stat-card,
+  .lp-hero {
+    break-inside: avoid;
+  }
+
+  .lp-table-wrap {
+    overflow: visible;
+  }
+
+  .lp-table {
+    min-width: 0;
+  }
+}

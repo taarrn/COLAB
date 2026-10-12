@@ -1,8 +1,7 @@
 import { daftarAnggota, singkatDivisi } from '../data'
 import type { Anggota } from '../data'
 
-export type Page = 'dashboard' | 'program' | 'tugas' | 'kalender'
-
+export type Page = 'dashboard' | 'program' | 'tugas' | 'kalender' | 'laporan'
 interface MenuItem {
   label: string
   icon: string
@@ -14,7 +13,7 @@ const items: MenuItem[] = [
   { label: 'Program Kerja', icon: '▤', page: 'program' },
   { label: 'Manajemen Tugas', icon: '☷', page: 'tugas' },
   { label: 'Kalender Kegiatan', icon: '▦', page: 'kalender' },
-  { label: 'Laporan Progres', icon: '▥' },
+  { label: 'Laporan Progres', icon: '▥', page: 'laporan' },
 ]
 
 interface Props {

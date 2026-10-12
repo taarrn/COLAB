@@ -7,6 +7,7 @@ import ProgramKerja from './pages/ProgramKerja'
 import ProgramDetail from './pages/ProgramDetail'
 import ManajemenTugas from './pages/ManajemenTugas'
 import KalenderKegiatan from './pages/KalenderKegiatan'
+import LaporanProgres from './pages/LaporanProgres'
 
 import {
   anggotaById,
@@ -145,7 +146,14 @@ function App() {
             onAddTugas={addTugas}
             onToggleTugas={toggleTugas}
           />
+          
         )}
+          {page === 'laporan' &&
+           <LaporanProgres 
+           programs={programs} 
+           tugas={tugas} 
+           />
+           }
 
         <footer className="footer">
 
