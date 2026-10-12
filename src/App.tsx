@@ -6,6 +6,8 @@ import Dashboard from './pages/Dashboard'
 import ProgramKerja from './pages/ProgramKerja'
 import ProgramDetail from './pages/ProgramDetail'
 import ManajemenTugas from './pages/ManajemenTugas'
+import KalenderKegiatan from './pages/KalenderKegiatan'
+
 import {
   anggotaById,
   loadPrograms,
@@ -134,8 +136,19 @@ function App() {
             onDelete={deleteTugas}
           />
         )}
+        
+        {page === 'kalender' && (
+          <KalenderKegiatan
+            programs={programs}
+            tugas={tugas}
+            user={user}
+            onAddTugas={addTugas}
+            onToggleTugas={toggleTugas}
+          />
+        )}
 
         <footer className="footer">
+
           KOLAB © 2026 — Kolaborasi lebih terarah, organisasi lebih produktif.
         </footer>
       </main>
