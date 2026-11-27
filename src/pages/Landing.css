@@ -235,3 +235,29 @@ html { scroll-behavior: smooth; scroll-padding-top: 84px; }
 
 .ld-ready .ld-float { animation: float-in 0.7s 1.2s cubic-bezier(0.3, 1.4, 0.5, 1) both; }
 @keyframes float-in { from { opacity: 0; transform: translateY(18px) scale(0.92); } to { opacity: 1; transform: none; } }
+
+/* ---------- Hierarki dan akses ---------- */
+
+.ld-tiers { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 10px; }
+.ld-tier { display: flex; align-items: center; gap: 16px; padding: 14px 20px; }
+.ld-tier-no { display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--red-soft); color: var(--red-deep); font-family: var(--f-display); font-weight: 700; }
+.ld-tier strong { font-size: 16px; }
+.ld-tier p { margin-top: 2px; font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
+
+.ld-matrix-wrap { overflow-x: auto; margin-bottom: 18px; }
+.ld-matrix { width: 100%; min-width: 760px; border-collapse: collapse; font-size: 13px; }
+.ld-matrix th, .ld-matrix td { padding: 11px 14px; text-align: center; border-bottom: 1px solid var(--hair); }
+.ld-matrix thead th { background: var(--cream); font-size: 12px; font-weight: 650; color: var(--ink-2); white-space: nowrap; }
+.ld-matrix tbody th { text-align: left; font-weight: 600; min-width: 190px; }
+.ld-matrix tbody tr:last-child > * { border-bottom: 0; }
+.ld-matrix .m-ya { color: #17694a; font-weight: 700; }
+.ld-matrix .m-tidak { color: var(--faint); }
+.ld-matrix .m-teks { color: var(--lilac-ink); font-weight: 600; font-size: 12px; }
+
+.ld-rules { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; max-width: 760px; }
+.ld-rules li { position: relative; padding-left: 20px; font-size: 14.5px; line-height: 1.55; color: var(--ink-2); }
+.ld-rules li::before { content: ''; position: absolute; left: 2px; top: 9px; width: 7px; height: 7px; border-radius: 50%; background: var(--red); }
+
+@media (max-width: 720px) {
+  .ld-tier { margin-left: 0 !important; }
+}

@@ -36,9 +36,37 @@ const fitur: { icon: IconName; tone: Tone; judul: string; teks: string }[] = [
   },
 ]
 
+const kolom = ['Ketua', 'DPH', 'Kadep, Wakadep', 'Sekdep', 'Ketua proker', 'Anggota']
+
+type Sel = { k: 'ya' | 'tidak' | 'teks'; t?: string }
+const ya: Sel = { k: 'ya' }
+const x: Sel = { k: 'tidak' }
+const t = (teks: string): Sel => ({ k: 'teks', t: teks })
+
+const tingkat = [
+  { nama: 'Ketua', teks: 'Pemegang kuasa tertinggi. Bisa mengatur semua orang, dan satu-satunya yang bisa menyerahkan jabatan Ketua.' },
+  { nama: 'DPH', teks: 'Mengatur semuanya di bawah Ketua: anggota, role, unit, program, dan undangan. Tidak bisa mengatur Ketua dan sesama DPH.' },
+  { nama: 'Kadep dan Wakadep', teks: 'Memimpin satu departemen. Wewenangnya hanya berlaku di departemen sendiri.' },
+  { nama: 'Sekdep', teks: 'Membantu administrasi departemen: ubah data program dan tandai tugas.' },
+  { nama: 'Anggota', teks: 'Melihat program, tugas, dan laporan, serta menandai tugasnya sendiri.' },
+]
+
+const matriks: { nama: string; nilai: Sel[] }[] = [
+  { nama: 'Membuat program', nilai: [ya, ya, t('Departemen sendiri'), x, x, x] },
+  { nama: 'Menghapus program', nilai: [ya, ya, t('Departemen sendiri'), x, x, x] },
+  { nama: 'Mengubah data program', nilai: [ya, ya, t('Departemen sendiri'), t('Departemen sendiri'), t('Programnya'), x] },
+  { nama: 'Membagi tugas dan bobot', nilai: [ya, ya, t('Departemen sendiri'), x, t('Programnya'), x] },
+  { nama: 'Menandai tugas selesai', nilai: [ya, ya, t('Departemen sendiri'), t('Departemen sendiri'), t('Programnya'), t('Tugasnya sendiri')] },
+  { nama: 'Melihat laporan', nilai: [ya, ya, ya, ya, ya, ya] },
+  { nama: 'Mengundang dan mengatur anggota', nilai: [ya, t('Di bawah DPH'), x, x, x, x] },
+  { nama: 'Mengatur role dan unit', nilai: [ya, t('Di bawah DPH'), x, x, x, x] },
+  { nama: 'Mengatur sesama DPH', nilai: [ya, x, x, x, x, x] },
+  { nama: 'Menyerahkan jabatan Ketua', nilai: [ya, x, x, x, x, x] },
+]
+
 const langkah = [
-  { judul: 'Buat program kerja', teks: 'Isi nama, departemen, jadwal, dan tentukan penanggung jawabnya.' },
-  { judul: 'Bagikan tugas', teks: 'Penanggung jawab membagi tugas ke anggota dan mengatur bobotnya.' },
+  { judul: 'Buat program kerja', teks: 'Isi nama, jadwal, dan tentukan ketua proker-nya.' },
+  { judul: 'Bagikan tugas', teks: 'Ketua proker membagi tugas ke anggota dan mengatur bobotnya.' },
   { judul: 'Pantau dan laporkan', teks: 'Progres terhitung otomatis. Laporan siap dilihat, diunduh, atau dicetak.' },
 ]
 
@@ -77,7 +105,7 @@ export default function Landing({ onEnter }: Props) {
           <nav className="ld-links" aria-label="Bagian halaman">
             <a href="#fitur">Fitur</a>
             <a href="#cara">Cara kerja</a>
-            <a href="#peran">Peran</a>
+            <a href="#peran">Hierarki</a>
           </nav>
           <button className="btn btn-primary" onClick={onEnter}>
             Masuk
@@ -205,32 +233,62 @@ export default function Landing({ onEnter }: Props) {
           </ol>
         </section>
 
-        {/* ---------- Peran ---------- */}
+        {/* ---------- Hierarki dan akses ---------- */}
         <section className="ld-wrap ld-section" id="peran">
           <div className="ld-head">
-            <span className="oval">Peran</span>
-            <h2>Hak akses yang jelas untuk tiap anggota</h2>
-            <p>Supaya data program tidak berubah sembarangan, kewenangan dibedakan berdasarkan peran.</p>
+            <span className="oval">Hierarki dan akses</span>
+            <h2>Siapa boleh apa, dari atas ke bawah</h2>
+            <p>
+              Aturannya satu: kamu hanya bisa mengatur jabatan yang berada di bawah jabatanmu. Tabel ini memakai susunan
+              bawaan BEM, dan tiap organisasi bebas mengubahnya sendiri di menu Role dan unit.
+            </p>
           </div>
 
-          <div className="ld-roles">
-            <article className="panel ld-role">
-              <span className="role-tag core">Penanggung jawab</span>
-              <ul>
-                <li>Menambah, mengubah, dan menghapus program kerja miliknya</li>
-                <li>Membagikan tugas ke anggota dan mengatur bobotnya</li>
-                <li>Menandai tugas selesai untuk seluruh programnya</li>
-              </ul>
-            </article>
-            <article className="panel ld-role">
-              <span className="role-tag helper">Anggota</span>
-              <ul>
-                <li>Melihat seluruh program, tugas, dan kalender kegiatan</li>
-                <li>Menandai selesai tugas yang diberikan kepadanya</li>
-                <li>Memantau progres dan laporan organisasi</li>
-              </ul>
-            </article>
+          <ol className="ld-tiers">
+            {tingkat.map((t, i) => (
+              <li className="panel ld-tier" key={t.nama} style={{ marginLeft: `${i * 14}px` }}>
+                <span className="ld-tier-no">{i + 1}</span>
+                <div>
+                  <strong>{t.nama}</strong>
+                  <p>{t.teks}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+
+          <div className="panel ld-matrix-wrap">
+            <table className="ld-matrix">
+              <thead>
+                <tr>
+                  <th scope="col">Kemampuan</th>
+                  {kolom.map((k) => (
+                    <th scope="col" key={k}>
+                      {k}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {matriks.map((r) => (
+                  <tr key={r.nama}>
+                    <th scope="row">{r.nama}</th>
+                    {r.nilai.map((v, i) => (
+                      <td key={i} className={`m-${v.k}`}>
+                        {v.k === 'ya' ? 'Ya' : v.k === 'tidak' ? '-' : v.t}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+
+          <ul className="ld-rules">
+            <li>DPH memegang hampir semua wewenang, kecuali mengatur Ketua dan sesama DPH.</li>
+            <li>Pemberian role dan izin hanya sampai batas yang kamu miliki sendiri, tidak bisa melebihi jabatanmu.</li>
+            <li>Ketua proker mengendalikan programnya sendiri, tapi tidak bisa menghapus program itu.</li>
+            <li>Satu orang boleh memegang lebih dari satu jabatan, dan di organisasi lain jabatannya bisa berbeda.</li>
+          </ul>
         </section>
 
         {/* ---------- Ajakan ---------- */}
