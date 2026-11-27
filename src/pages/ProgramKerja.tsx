@@ -1,28 +1,26 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import './ProgramKerja.css'
 import ProgramForm from '../components/ProgramForm'
-import { anggotaById, formatTanggal, hitungProgres, statusList, toneOf } from '../data'
+import { Avatar, Empty, Icon, Meter, Modal, PageHead } from '../components/ui'
+import { anggotaById, formatTanggal, hitungProgres, singkatDivisi, statusList, toneOf } from '../data'
 import type { Program, Status, Tugas } from '../data'
 
 interface Props {
   programs: Program[]
   tugas: Tugas[]
   onAdd: (data: Omit<Program, 'id'>) => void
+  bolehTambah: boolean
+  unitBoleh: string[]
+  labelUnit: string
   onOpen: (id: number) => void
 }
 
-export default function ProgramKerja({ programs, tugas, onAdd, onOpen }: Props) {
+const pad = (n: number) => String(n).padStart(2, '0')
+
+export default function ProgramKerja({ programs, tugas, onAdd, onOpen, bolehTambah, unitBoleh, labelUnit }: Props) {
   const [showForm, setShowForm] = useState(false)
   const [filter, setFilter] = useState<Status | 'Semua'>('Semua')
   const [query, setQuery] = useState('')
-
-  // Tutup modal dengan tombol Escape
-  useEffect(() => {
-    if (!showForm) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setShowForm(false)
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [showForm])
 
   // Progres dan status dihitung dari tugas tiap program
   const rows = programs.map((p) => ({ program: p, ...hitungProgres(p.id, tugas) }))
@@ -36,63 +34,72 @@ export default function ProgramKerja({ programs, tugas, onAdd, onOpen }: Props) 
   const countOf = (s: Status | 'Semua') =>
     s === 'Semua' ? rows.length : rows.filter((r) => r.status === s).length
 
+  const berjalan = rows.filter((r) => r.status === 'Berjalan').length
+
   return (
     <>
-      <header className="topbar">
-        <div>
-          <p className="breadcrumb">Menu Utama / Program Kerja</p>
-          <h1>Program Kerja</h1>
-        </div>
-        <button className="btn btn-primary" onClick={() => setShowForm(true)}>
-          + Tambah program
-        </button>
-      </header>
+      <PageHead
+        eyebrow="Program kerja"
+        title="Program Kerja"
+        sticker={berjalan > 0 ? `${berjalan} sedang berjalan` : `${programs.length} program`}
+      >
+        {bolehTambah && (
+          <button className="btn btn-primary" onClick={() => setShowForm(true)}>
+            <Icon name="plus" size={16} /> Tambah program
+          </button>
+        )}
+      </PageHead>
 
       <div className="toolbar">
-        <div className="tabs" role="tablist">
+        <div className="segmented" role="tablist">
           {(['Semua', ...statusList] as const).map((s) => (
             <button
               key={s}
               role="tab"
               aria-selected={filter === s}
-              className={`tab${filter === s ? ' active' : ''}`}
+              className={`seg${filter === s ? ' active' : ''}`}
               onClick={() => setFilter(s)}
             >
-              {s} <span className="tab-count">{countOf(s)}</span>
+              {s} <span className="seg-count">{countOf(s)}</span>
             </button>
           ))}
         </div>
-        <input
-          className="search"
-          type="search"
-          placeholder="Cari nama program"
-          aria-label="Cari nama program"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+        <label className="search-box">
+          <Icon name="search" size={16} />
+          <input
+            type="search"
+            placeholder="Cari nama program"
+            aria-label="Cari nama program"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </label>
       </div>
 
       {visible.length === 0 ? (
-        <div className="panel empty-state">
-          <h3>{programs.length === 0 ? 'Belum ada program kerja' : 'Tidak ada program yang cocok'}</h3>
-          <p>
-            {programs.length === 0
+        <Empty
+          title={programs.length === 0 ? 'Belum ada program kerja' : 'Tidak ada program yang cocok'}
+          text={
+            programs.length === 0
               ? 'Tambahkan program pertama untuk mulai memantau progresnya.'
-              : 'Coba ubah filter status atau kata pencarian.'}
-          </p>
-          {programs.length === 0 && (
-            <button className="btn btn-primary" onClick={() => setShowForm(true)}>
-              + Tambah program
-            </button>
-          )}
-        </div>
+              : 'Coba ubah filter status atau kata pencarian.'
+          }
+          action={
+            programs.length === 0 ? (
+              <button className="btn btn-primary" onClick={() => setShowForm(true)}>
+                <Icon name="plus" size={16} /> Tambah program
+              </button>
+            ) : undefined
+          }
+        />
       ) : (
         <div className="program-grid">
-          {visible.map(({ program: p, progres, status, total, selesai }) => {
+          {visible.map(({ program: p, progres, status, total, selesai }, i) => {
             const tone = toneOf(p.departemen)
+            const pj = anggotaById(p.pjId)
             return (
-                            <article
-                className="panel program-card clickable"
+              <article
+                className={`panel pcard tone-${tone}`}
                 key={p.id}
                 role="button"
                 tabIndex={0}
@@ -104,68 +111,65 @@ export default function ProgramKerja({ programs, tugas, onAdd, onOpen }: Props) 
                   }
                 }}
               >
-                <div className="program-card-top">
-                  <span className={`badge ${tone}`}>{p.departemen}</span>
-                  <span className={`state state-${status.toLowerCase()}`}>{status}</span>
+                <span className="pcard-index" aria-hidden="true">
+                  {pad(i + 1)}
+                </span>
+
+                <div className="pcard-top">
+                  {p.departemen && <span className="badge">{singkatDivisi(p.departemen)}</span>}
                 </div>
 
                 <h3>{p.nama}</h3>
-                {p.deskripsi && <p className="program-desc">{p.deskripsi}</p>}
+                {p.deskripsi && <p className="pcard-desc">{p.deskripsi}</p>}
 
-                <dl className="program-meta">
+                <dl className="pcard-meta">
                   <div>
                     <dt>Jadwal</dt>
                     <dd>
                       {formatTanggal(p.mulai)} – {formatTanggal(p.selesai)}
                     </dd>
                   </div>
-                   <div>
+                  <div>
                     <dt>Penanggung jawab</dt>
-                    <dd>{anggotaById(p.pjId).nama}</dd>
+                    <dd className="pj">
+                      <Avatar nama={pj.nama} tone={toneOf(pj.divisi)} size={22} />
+                      {pj.nama}
+                    </dd>
                   </div>
                 </dl>
 
-                <div className="program-progress">
-                  <div className="progress-track">
-                    <div
-                      className={`progress-fill ${tone}-fill`}
-                      style={{ width: `${progres}%` }}
-                    />
+                <div className="pcard-foot">
+                  <div className="pcard-progress">
+                    <Meter value={progres} tone={tone} label={`Progres ${p.nama}`} />
+                    <span className="pct">{progres}%</span>
                   </div>
-                  <span className={`status status-${tone}`}>{progres}%</span>
+                  <div className="pcard-sub">
+                    <span>
+                      {total === 0 ? 'Belum ada tugas' : `${selesai} dari ${total} tugas selesai`}
+                    </span>
+                    <span className={`state state-${status.toLowerCase()}`}>{status}</span>
+                  </div>
                 </div>
-                <p className="program-tasks">
-                  {total === 0
-                    ? 'Belum ada tugas'
-                    : `${selesai} dari ${total} tugas selesai`}
-                </p>
               </article>
             )
           })}
         </div>
       )}
 
-      {showForm && (
-        <div className="overlay" onMouseDown={() => setShowForm(false)}>
-          <div
-            className="modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="form-title"
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            <h2 id="form-title">Tambah program kerja</h2>
-            <ProgramForm
-              onCancel={() => setShowForm(false)}
-              onSubmit={(data) => {
-                onAdd(data)
-                setFilter('Semua')
-                setQuery('')
-                setShowForm(false)
-              }}
-            />
-          </div>
-        </div>
+      {showForm && bolehTambah && (
+        <Modal title="Tambah program" eyebrow="Program baru" onClose={() => setShowForm(false)}>
+          <ProgramForm
+            units={unitBoleh}
+            labelUnit={labelUnit}
+            onCancel={() => setShowForm(false)}
+            onSubmit={(data) => {
+              onAdd(data)
+              setFilter('Semua')
+              setQuery('')
+              setShowForm(false)
+            }}
+          />
+        </Modal>
       )}
     </>
   )

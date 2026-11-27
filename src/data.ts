@@ -1,17 +1,19 @@
 export type Status = 'Perencanaan' | 'Berjalan' | 'Selesai'
-export type Tone = 'purple' | 'orange' | 'blue' | 'green'
+export type Tone = 'red' | 'blue' | 'lilac' | 'butter' | 'mint'
 export type Prioritas = 'Tinggi' | 'Sedang' | 'Rendah'
 
 export interface Anggota {
-  id: number
+  id: number // id akun
   nama: string
-  divisi: string // salah satu isi departemenList
+  divisi: string // nama unit (departemen/divisi) anggota di organisasi aktif, kosong kalau tidak punya unit
+  jabatan?: string // label jabatan tertinggi di organisasi aktif
 }
 
 export interface Program {
   id: number
+  orgId: string
   nama: string
-  departemen: string
+  departemen: string // nama unit pemilik program
   deskripsi: string
   pjId: number // id anggota penanggung jawab program
   mulai: string // format YYYY-MM-DD
@@ -32,35 +34,28 @@ export interface Tugas {
 
 export type TugasInput = Omit<Tugas, 'id' | 'selesai'>
 
-export const departemenList = [
-  'Departemen Sosial Masyarakat',
-  'Departemen Pendidikan',
-  'Departemen Minat dan Bakat',
-  'Departemen Humas dan Media',
-  'Departemen Kewirausahaan',
-]
-
 export const statusList: Status[] = ['Perencanaan', 'Berjalan', 'Selesai']
 export const prioritasList: Prioritas[] = ['Tinggi', 'Sedang', 'Rendah']
 
-// Daftar anggota sementara ditulis di kode. Ganti dengan nama anggota
-// sebenarnya; nanti bisa dipindah ke menu Anggota atau database.
-export const daftarAnggota: Anggota[] = [
-  { id: 1, nama: 'Aulia Rahman', divisi: 'Departemen Sosial Masyarakat' },
-  { id: 2, nama: 'Bima Pratama', divisi: 'Departemen Sosial Masyarakat' },
-  { id: 3, nama: 'Dina Safitri', divisi: 'Departemen Pendidikan' },
-  { id: 4, nama: 'Eko Prasetyo', divisi: 'Departemen Pendidikan' },
-  { id: 5, nama: 'Rizky Maulana', divisi: 'Departemen Minat dan Bakat' },
-  { id: 6, nama: 'Salsa Amelia', divisi: 'Departemen Minat dan Bakat' },
-  { id: 7, nama: 'Nadia Putri', divisi: 'Departemen Humas dan Media' },
-  { id: 8, nama: 'Gilang Ramadhan', divisi: 'Departemen Humas dan Media' },
-  { id: 9, nama: 'Fajar Hidayat', divisi: 'Departemen Kewirausahaan' },
-  { id: 10, nama: 'Hana Maharani', divisi: 'Departemen Kewirausahaan' },
-]
+// Konteks organisasi aktif. App mengisinya setiap render sebelum halaman digambar,
+// jadi halaman cukup memanggil fungsi di bawah tanpa perlu menerima daftar lewat props.
+let aktif: { anggota: Anggota[]; units: string[]; semua: { id: number; nama: string }[] } = {
+  anggota: [],
+  units: [],
+  semua: [],
+}
+
+export function setKonteks(anggota: Anggota[], units: string[], semua: { id: number; nama: string }[]) {
+  aktif = { anggota, units, semua }
+}
+
+export const daftarAnggota = () => aktif.anggota
+export const daftarUnit = () => aktif.units
 
 export function anggotaById(id: number): Anggota {
   return (
-    daftarAnggota.find((a) => a.id === id) ?? {
+    aktif.anggota.find((a) => a.id === id) ??
+    (aktif.semua.find((a) => a.id === id) ? { id, nama: aktif.semua.find((a) => a.id === id)!.nama, divisi: '' } : null) ?? {
       id,
       nama: 'Anggota tidak dikenal',
       divisi: '',
@@ -70,11 +65,11 @@ export function anggotaById(id: number): Anggota {
 
 export const singkatDivisi = (divisi: string) => divisi.replace('Departemen ', '')
 
-// Warna program mengikuti departemennya, memakai kelas warna di App.css
-const tones: Tone[] = ['purple', 'orange', 'blue', 'green']
+// Warna program mengikuti unitnya, urut sesuai daftar unit organisasi aktif (kelas .tone-* di index.css)
+const tones: Tone[] = ['red', 'blue', 'lilac', 'butter', 'mint']
 
 export function toneOf(departemen: string): Tone {
-  const index = departemenList.indexOf(departemen)
+  const index = aktif.units.indexOf(departemen)
   return tones[(index < 0 ? 0 : index) % tones.length]
 }
 
@@ -147,8 +142,9 @@ export function ringkasAnggota(program: Program, tugas: Tugas[]) {
 export const initialPrograms: Program[] = [
   {
     id: 1,
+    orgId: 'hmif',
     nama: 'Informatika Menyapa',
-    departemen: 'Departemen Sosial Masyarakat',
+    departemen: 'Sosial Masyarakat',
     deskripsi: 'Kegiatan pengabdian ke sekolah untuk mengenalkan dunia informatika.',
     pjId: 1,
     mulai: '2026-02-01',
@@ -156,8 +152,9 @@ export const initialPrograms: Program[] = [
   },
   {
     id: 2,
+    orgId: 'hmif',
     nama: 'Pelatihan Internal',
-    departemen: 'Departemen Pendidikan',
+    departemen: 'Pendidikan',
     deskripsi: 'Pelatihan rutin untuk pengurus dan anggota, dari dasar web hingga Git.',
     pjId: 3,
     mulai: '2026-03-10',
@@ -165,8 +162,9 @@ export const initialPrograms: Program[] = [
   },
   {
     id: 3,
+    orgId: 'hmif',
     nama: 'Dies Natalis Informatika',
-    departemen: 'Departemen Minat dan Bakat',
+    departemen: 'Minat dan Bakat',
     deskripsi: 'Perayaan ulang tahun prodi dengan lomba, seminar, dan malam apresiasi.',
     pjId: 5,
     mulai: '2026-08-01',
@@ -174,8 +172,9 @@ export const initialPrograms: Program[] = [
   },
   {
     id: 4,
+    orgId: 'hmif',
     nama: 'Media Kreatif HMIF',
-    departemen: 'Departemen Humas dan Media',
+    departemen: 'Humas dan Media',
     deskripsi: 'Pengelolaan konten Instagram dan dokumentasi seluruh kegiatan himpunan.',
     pjId: 7,
     mulai: '2026-01-15',
@@ -183,12 +182,23 @@ export const initialPrograms: Program[] = [
   },
   {
     id: 5,
+    orgId: 'hmif',
     nama: 'Bazar Merchandise',
-    departemen: 'Departemen Kewirausahaan',
+    departemen: 'Kewirausahaan',
     deskripsi: 'Penjualan merchandise himpunan untuk menambah kas organisasi.',
     pjId: 9,
     mulai: '2026-11-05',
     selesai: '2027-01-10',
+  },
+  {
+    id: 6,
+    orgId: 'ukm-kreatif',
+    nama: 'Pameran Karya',
+    departemen: 'Desain',
+    deskripsi: 'Pameran karya anggota di akhir semester, dari poster sampai fotografi.',
+    pjId: 6,
+    mulai: '2026-10-20',
+    selesai: '2026-12-10',
   },
 ]
 
@@ -205,6 +215,9 @@ export const initialTugas: Tugas[] = [
   { id: 10, nama: 'Mencari sponsor', programId: 3, anggotaId: 10, prioritas: 'Sedang', tenggat: '2026-11-15', bobot: 40, selesai: false },
   { id: 11, nama: 'Membuat kalender konten', programId: 4, anggotaId: 7, prioritas: 'Sedang', tenggat: '2026-09-30', bobot: 50, selesai: true },
   { id: 12, nama: 'Dokumentasi kegiatan bulanan', programId: 4, anggotaId: 8, prioritas: 'Rendah', tenggat: '2026-10-10', bobot: 50, selesai: true },
+  { id: 14, nama: 'Memilih karya yang dipamerkan', programId: 6, anggotaId: 10, prioritas: 'Sedang', tenggat: '2026-11-20', bobot: 40, selesai: false },
+  { id: 15, nama: 'Mendesain katalog pameran', programId: 6, anggotaId: 6, prioritas: 'Tinggi', tenggat: '2026-11-28', bobot: 40, selesai: false },
+  { id: 16, nama: 'Menyiapkan lokasi pameran', programId: 6, anggotaId: 1, prioritas: 'Rendah', tenggat: '2026-12-05', bobot: 20, selesai: true },
   { id: 13, nama: 'Publikasi pelatihan', programId: 2, anggotaId: 8, prioritas: 'Sedang', tenggat: '2026-11-01', bobot: 20, selesai: false },
 ]
 
@@ -235,12 +248,11 @@ export function rentangTugas(t: Tugas, hariIni: string): { awal: string; akhir: 
   return { awal, akhir }
 }
 
-// Key diberi v2 karena bentuk datanya berubah (ada pjId, anggotaId, bobot)
-const PROGRAM_KEY = 'kolab:programs:v2'
-const TUGAS_KEY = 'kolab:tugas:v2'
-const USER_KEY = 'kolab:user:v2'
+// Key diberi v3 karena bentuk datanya berubah (program punya orgId)
+const PROGRAM_KEY = 'kolab:programs:v3'
+const TUGAS_KEY = 'kolab:tugas:v3'
 
-function load<T>(key: string, fallback: T): T {
+export function load<T>(key: string, fallback: T): T {
   try {
     const raw = localStorage.getItem(key)
     if (raw) return JSON.parse(raw) as T
@@ -250,7 +262,7 @@ function load<T>(key: string, fallback: T): T {
   return fallback
 }
 
-function save<T>(key: string, value: T) {
+export function save<T>(key: string, value: T) {
   try {
     localStorage.setItem(key, JSON.stringify(value))
   } catch {
@@ -262,5 +274,3 @@ export const loadPrograms = () => load<Program[]>(PROGRAM_KEY, initialPrograms)
 export const savePrograms = (programs: Program[]) => save(PROGRAM_KEY, programs)
 export const loadTugas = () => load<Tugas[]>(TUGAS_KEY, initialTugas)
 export const saveTugas = (tugas: Tugas[]) => save(TUGAS_KEY, tugas)
-export const loadUserId = () => load<number>(USER_KEY, daftarAnggota[0].id)
-export const saveUserId = (id: number) => save(USER_KEY, id)

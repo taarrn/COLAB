@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import './ProgramDetail.css'
 import ProgramForm from '../components/ProgramForm'
 import TugasForm from '../components/TugasForm'
+import { Avatar, Icon, Meter, Modal, PageHead } from '../components/ui'
 import {
   anggotaById,
   formatTanggal,
@@ -11,12 +12,15 @@ import {
   toneOf,
   totalBobot,
 } from '../data'
-import type { Anggota, Program, Tugas, TugasInput } from '../data'
+import type { Program, Tugas, TugasInput } from '../data'
+import type { Akses } from '../org'
 
 interface Props {
   program: Program
   tugas: Tugas[]
-  user: Anggota
+  akses: Akses
+  unitBoleh: string[]
+  labelUnit: string
   onBack: () => void
   onUpdate: (data: Omit<Program, 'id'>) => void
   onDelete: () => void
@@ -33,7 +37,9 @@ type FormTugas = null | { anggotaId?: number; tugas?: Tugas }
 export default function ProgramDetail({
   program,
   tugas,
-  user,
+  akses,
+  unitBoleh,
+  labelUnit,
   onBack,
   onUpdate,
   onDelete,
@@ -46,19 +52,10 @@ export default function ProgramDetail({
   const [showEdit, setShowEdit] = useState(false)
   const [formTugas, setFormTugas] = useState<FormTugas>(null)
 
-  useEffect(() => {
-    if (!showEdit && !formTugas) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return
-      setShowEdit(false)
-      setFormTugas(null)
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [showEdit, formTugas])
-
   const pj = anggotaById(program.pjId)
-  const bolehEdit = user.id === program.pjId // hanya PJ yang boleh mengubah
+  const bolehData = akses.editProgram(program) // ubah data program
+  const bolehHapus = akses.hapusProgram(program) // ketua proker tidak bisa menghapus programnya
+  const bolehEdit = akses.kelolaTugas(program) // bagi tugas dan atur bobot
   const tone = toneOf(program.departemen)
   const { progres, status, total, selesai } = hitungProgres(program.id, tugas)
   const bobotTotal = totalBobot(program.id, tugas)
@@ -83,60 +80,61 @@ export default function ProgramDetail({
 
   return (
     <>
-      <header className="topbar">
-        <div>
-          <p className="breadcrumb">Menu Utama / Program Kerja / {program.nama}</p>
-          <h1>{program.nama}</h1>
-        </div>
-        <div className="detail-actions">
-          <button className="btn btn-ghost" onClick={onBack}>
-            ← Kembali
+      <PageHead eyebrow={singkatDivisi(program.departemen)} title={program.nama} sticker={status}>
+        <button className="btn btn-ghost" onClick={onBack}>
+          <Icon name="left" size={16} /> Kembali
+        </button>
+        {bolehData && (
+          <button className="btn btn-ghost" onClick={() => setShowEdit(true)}>
+            <Icon name="edit" size={15} /> Edit
           </button>
-          {bolehEdit && (
-            <>
-              <button className="btn btn-ghost" onClick={() => setShowEdit(true)}>
-                Edit
-              </button>
-              <button className="btn btn-danger" onClick={hapus}>
-                Hapus
-              </button>
-            </>
-          )}
+        )}
+        {bolehHapus && (
+          <button className="btn btn-danger" onClick={hapus}>
+            <Icon name="trash" size={15} /> Hapus
+          </button>
+        )}
+      </PageHead>
+
+      <section className={`panel summary tone-${tone}`}>
+        <div className="summary-main">
+          <div className="summary-tags">
+            {program.departemen && <span className="badge">{program.departemen}</span>}
+            <span className={`state state-${status.toLowerCase()}`}>{status}</span>
+          </div>
+
+          {program.deskripsi && <p className="summary-desc">{program.deskripsi}</p>}
+
+          <dl className="summary-meta">
+            <div>
+              <dt>Penanggung jawab</dt>
+              <dd className="with-avatar">
+                <Avatar nama={pj.nama} tone={toneOf(pj.divisi)} size={26} />
+                <span>
+                  {pj.nama} <small>{pj.divisi ? singkatDivisi(pj.divisi) : pj.jabatan}</small>
+                </span>
+              </dd>
+            </div>
+            <div>
+              <dt>Jadwal</dt>
+              <dd>
+                {formatTanggal(program.mulai)} – {formatTanggal(program.selesai)}
+              </dd>
+            </div>
+            <div>
+              <dt>Tugas</dt>
+              <dd>{total === 0 ? 'Belum ada tugas' : `${selesai} dari ${total} selesai`}</dd>
+            </div>
+          </dl>
         </div>
-      </header>
 
-      <section className="panel detail-summary">
-        <div className="program-card-top">
-          <span className={`badge ${tone}`}>{program.departemen}</span>
-          <span className={`state state-${status.toLowerCase()}`}>{status}</span>
-        </div>
-
-        {program.deskripsi && <p className="program-desc">{program.deskripsi}</p>}
-
-        <dl className="detail-meta">
-          <div>
-            <dt>Penanggung jawab</dt>
-            <dd>
-              {pj.nama} <span className="muted">· {singkatDivisi(pj.divisi)}</span>
-            </dd>
+        <div className="summary-score">
+          <div className="score-number" aria-label={`${progres} persen`}>
+            {progres}
+            <span>%</span>
           </div>
-          <div>
-            <dt>Jadwal</dt>
-            <dd>
-              {formatTanggal(program.mulai)} – {formatTanggal(program.selesai)}
-            </dd>
-          </div>
-          <div>
-            <dt>Tugas</dt>
-            <dd>{total === 0 ? 'Belum ada tugas' : `${selesai} dari ${total} selesai`}</dd>
-          </div>
-        </dl>
-
-        <div className="program-progress">
-          <div className="progress-track">
-            <div className={`progress-fill ${tone}-fill`} style={{ width: `${progres}%` }} />
-          </div>
-          <span className={`status status-${tone}`}>{progres}%</span>
+          <Meter value={progres} tone={tone} label={`Progres ${program.nama}`} />
+          <p>progres program</p>
         </div>
       </section>
 
@@ -150,7 +148,7 @@ export default function ProgramDetail({
         </div>
         {bolehEdit && (
           <button className="btn btn-primary" onClick={() => setFormTugas({})}>
-            + Tambah tugas
+            <Icon name="plus" size={16} /> Tambah tugas
           </button>
         )}
       </div>
@@ -163,158 +161,145 @@ export default function ProgramDetail({
               Bagi rata
             </button>
           ) : (
-            <span className="muted">Hanya penanggung jawab yang bisa mengubah bobot.</span>
+            <span className="muted">Hanya pengurus yang berwenang yang bisa mengubah bobot.</span>
           )}
         </div>
       )}
 
       {total === 0 && (
-        <p className="detail-note">
+        <p className="note">
           {bolehEdit
             ? 'Belum ada tugas untuk program ini. Klik "Tambah tugas" untuk membagikan tugas ke anggota.'
-            : 'Belum ada tugas untuk program ini. Penanggung jawab yang bisa menambahkannya.'}
+            : 'Belum ada tugas untuk program ini. Ketua proker atau pengurus yang berwenang yang bisa menambahkannya.'}
         </p>
       )}
 
-      {daftar.map(({ anggota, tugas: tugasAnggota, beban, progres: p, inti, pj: adalahPj }) => (
-        <section
-          className={`panel member ${inti ? 'member-core' : 'member-helper'}`}
-          key={anggota.id}
-        >
-          <div className="member-head">
-            <div className="member-avatar">{anggota.nama.charAt(0)}</div>
-            <div className="member-id">
-              <strong>
-                {anggota.nama}
-                {adalahPj && <span className="pj-tag">PJ</span>}
-              </strong>
-              <p>{singkatDivisi(anggota.divisi)}</p>
+      <div className="member-grid">
+        {daftar.map(({ anggota, tugas: tugasAnggota, beban, progres: p, inti, pj: adalahPj }) => (
+          <section
+            className={`panel member tone-${toneOf(anggota.divisi)} ${inti ? 'member-core' : 'member-helper'}`}
+            key={anggota.id}
+          >
+            <div className="member-head">
+              <Avatar nama={anggota.nama} tone={toneOf(anggota.divisi)} size={42} />
+              <div className="member-id">
+                <strong>
+                  {anggota.nama}
+                  {adalahPj && <span className="pj-tag">PJ</span>}
+                </strong>
+                <p>{anggota.divisi ? singkatDivisi(anggota.divisi) : anggota.jabatan}</p>
+              </div>
+              <span className={`role-tag ${inti ? 'core' : 'helper'}`}>{inti ? 'Tim inti' : 'Dibantu'}</span>
             </div>
+
+            <div className="member-stats">
+              <div className="member-beban">
+                <span>Beban</span>
+                <strong>{beban}%</strong>
+              </div>
+              <div className="member-progress">
+                <Meter value={p} tone={toneOf(anggota.divisi)} label={`Progres ${anggota.nama}`} />
+                <span className="pct">{p}%</span>
+              </div>
+            </div>
+
+            {tugasAnggota.length === 0 ? (
+              <p className="member-empty">Belum memegang tugas.</p>
+            ) : (
+              <ul className="member-tasks">
+                {tugasAnggota.map((t) => (
+                  <li key={t.id} className={t.selesai ? 'done' : ''}>
+                    <span className={`tstate${t.selesai ? ' done' : ''}`} aria-hidden="true">
+                      {t.selesai && <Icon name="check" size={20} />}
+                    </span>
+                    <span className="member-task-name">{t.nama}</span>
+                    {bolehEdit ? (
+                      <label className="bobot-input">
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={t.bobot}
+                          onChange={(e) => onSetBobot(t.id, Number(e.target.value))}
+                          aria-label={`Bobot tugas: ${t.nama}`}
+                        />
+                        %
+                      </label>
+                    ) : (
+                      <span className="bobot-read">{t.bobot}%</span>
+                    )}
+                    {bolehEdit && (
+                      <>
+                        <button
+                          className="icon-btn"
+                          onClick={() => setFormTugas({ tugas: t })}
+                          aria-label={`Edit tugas: ${t.nama}`}
+                          title="Edit / alihkan tugas"
+                        >
+                          <Icon name="edit" size={15} />
+                        </button>
+                        <button
+                          className="icon-btn danger"
+                          onClick={() => hapusTugas(t)}
+                          aria-label={`Hapus tugas: ${t.nama}`}
+                          title="Hapus tugas"
+                        >
+                          <Icon name="trash" size={15} />
+                        </button>
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+
             {bolehEdit && (
               <button
-                className="btn btn-ghost btn-small"
+                className="btn btn-ghost btn-small member-add"
                 onClick={() => setFormTugas({ anggotaId: anggota.id })}
               >
-                + Beri tugas
+                <Icon name="plus" size={14} /> Beri tugas
               </button>
             )}
-            <span className={`role-tag ${inti ? 'core' : 'helper'}`}>
-              {inti ? 'Tim inti' : 'Dibantu'}
-            </span>
-          </div>
+          </section>
+        ))}
+      </div>
 
-          <div className="member-stats">
-            <div className="member-beban">
-              <span>Beban</span>
-              <strong>{beban}%</strong>
-            </div>
-            <div className="program-progress">
-              <div className="progress-track">
-                <div className="progress-fill" style={{ width: `${p}%` }} />
-              </div>
-              <span className="member-percent">{p}%</span>
-            </div>
-          </div>
-
-          {tugasAnggota.length === 0 ? (
-            <p className="member-empty">Belum memegang tugas.</p>
-          ) : (
-            <ul className="member-tasks">
-              {tugasAnggota.map((t) => (
-                <li key={t.id}>
-                  <span className={`task-state${t.selesai ? ' done' : ''}`}>
-                    {t.selesai ? '✓' : '○'}
-                  </span>
-                  <span className="member-task-name">{t.nama}</span>
-                  {bolehEdit ? (
-                    <label className="bobot-input">
-                      <input
-                        type="number"
-                        min={0}
-                        max={100}
-                        value={t.bobot}
-                        onChange={(e) => onSetBobot(t.id, Number(e.target.value))}
-                        aria-label={`Bobot tugas: ${t.nama}`}
-                      />
-                      %
-                    </label>
-                  ) : (
-                    <span className="bobot-read">{t.bobot}%</span>
-                  )}
-                  {bolehEdit && (
-                    <>
-                      <button
-                        className="mini-btn"
-                        onClick={() => setFormTugas({ tugas: t })}
-                        aria-label={`Edit tugas: ${t.nama}`}
-                        title="Edit / alihkan tugas"
-                      >
-                        ✎
-                      </button>
-                      <button
-                        className="mini-btn danger"
-                        onClick={() => hapusTugas(t)}
-                        aria-label={`Hapus tugas: ${t.nama}`}
-                        title="Hapus tugas"
-                      >
-                        ✕
-                      </button>
-                    </>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      ))}
-
-      {showEdit && (
-        <div className="overlay" onMouseDown={() => setShowEdit(false)}>
-          <div
-            className="modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="edit-title"
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            <h2 id="edit-title">Edit program kerja</h2>
-            <ProgramForm
-              initial={program}
-              onCancel={() => setShowEdit(false)}
-              onSubmit={(data) => {
-                onUpdate(data)
-                setShowEdit(false)
-              }}
-            />
-          </div>
-        </div>
+      {showEdit && bolehData && (
+        <Modal title="Edit program" eyebrow="Ubah program" onClose={() => setShowEdit(false)}>
+          <ProgramForm
+            initial={program}
+            units={unitBoleh}
+            labelUnit={labelUnit}
+            onCancel={() => setShowEdit(false)}
+            onSubmit={(data) => {
+              onUpdate(data)
+              setShowEdit(false)
+            }}
+          />
+        </Modal>
       )}
 
       {formTugas && bolehEdit && (
-        <div className="overlay" onMouseDown={() => setFormTugas(null)}>
-          <div
-            className="modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="tugas-title"
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            <h2 id="tugas-title">{formTugas.tugas ? 'Edit tugas' : 'Tambah tugas'}</h2>
-            <TugasForm
-              programs={[program]}
-              lockProgram
-              initial={formTugas.tugas}
-              defaultProgramId={program.id}
-              defaultAnggotaId={formTugas.anggotaId}
-              onCancel={() => setFormTugas(null)}
-              onSubmit={(data) => {
-                if (formTugas.tugas) onUpdateTugas(formTugas.tugas.id, data)
-                else onAddTugas(data)
-                setFormTugas(null)
-              }}
-            />
-          </div>
-        </div>
+        <Modal
+          title={formTugas.tugas ? 'Edit tugas' : 'Tambah tugas'}
+          eyebrow={program.nama}
+          onClose={() => setFormTugas(null)}
+        >
+          <TugasForm
+            programs={[program]}
+            lockProgram
+            initial={formTugas.tugas}
+            defaultProgramId={program.id}
+            defaultAnggotaId={formTugas.anggotaId}
+            onCancel={() => setFormTugas(null)}
+            onSubmit={(data) => {
+              if (formTugas.tugas) onUpdateTugas(formTugas.tugas.id, data)
+              else onAddTugas(data)
+              setFormTugas(null)
+            }}
+          />
+        </Modal>
       )}
     </>
   )

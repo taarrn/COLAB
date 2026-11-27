@@ -1,145 +1,151 @@
-import type { Program, Tugas } from '../data'
-import { hitungProgres, toneOf } from '../data'
+import './Dashboard.css'
+import type { Anggota, Program, Tugas } from '../data'
+import { hariIniKey, hitungProgres, keyTanggal, toneOf } from '../data'
 import type { Page } from '../components/Sidebar'
+import { Icon, Meter, PageHead } from '../components/ui'
 
 interface Props {
   programs: Program[]
   tugas: Tugas[]
+  user: Anggota
   onNavigate: (page: Page) => void
 }
 
 const pad = (n: number) => String(n).padStart(2, '0')
-
 const prioritasClass = { Tinggi: 'high', Sedang: 'medium', Rendah: 'low' } as const
 
-export default function Dashboard({ programs, tugas, onNavigate }: Props) {
+// Berapa hari ke depan yang dihitung sebagai "mendatang"
+const JENDELA_HARI = 14
+
+export default function Dashboard({ programs, tugas, user, onNavigate }: Props) {
+  const hariIni = hariIniKey()
+  const batas = new Date()
+  batas.setDate(batas.getDate() + JENDELA_HARI)
+  const batasKey = keyTanggal(batas)
+
   const hasil = programs.map((p) => ({ program: p, ...hitungProgres(p.id, tugas) }))
   const rataRata = hasil.length
     ? Math.round(hasil.reduce((sum, h) => sum + h.progres, 0) / hasil.length)
     : 0
   const tugasBerjalan = tugas.filter((t) => !t.selesai).length
+  const tugasMendatang = tugas.filter(
+    (t) => !t.selesai && t.tenggat && t.tenggat >= hariIni && t.tenggat <= batasKey,
+  ).length
+
+  const tanggalLabel = new Date().toLocaleDateString('id-ID', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  })
+  const namaDepan = user.nama.split(' ')[0]
+  const namaProgram = (id: number) => programs.find((p) => p.id === id)?.nama ?? 'Program dihapus'
 
   return (
     <>
-      <header className="topbar">
-        <div>
-          <p className="breadcrumb">Menu Utama / Dashboard</p>
-          <h1>Dashboard</h1>
-        </div>
-        <div className="date-label">📅 Tahun 2026</div>
-      </header>
+      <PageHead
+        eyebrow={tanggalLabel}
+        title={`Halo, ${namaDepan}`}
+        sticker={tugasBerjalan === 0 ? 'semua tugas beres' : `${tugasBerjalan} tugas menunggu`}
+      />
 
-      <section className="welcome">
-        <div>
-          <p className="welcome-label">ORGANIZATION WORKSPACE</p>
-          <h2>Halo, Pengurus! 👋</h2>
-          <p>
-            Kelola program kerja dan kolaborasi tim organisasi dalam satu tempat.
-          </p>
-        </div>
-        <div className="welcome-decoration">K</div>
-      </section>
-
-      <section className="stats">
-        <div className="stat-card">
-          <div className="stat-top">
-            <span>Total Program Kerja</span>
-            <span className="stat-icon purple">▤</span>
+      <div className="home-grid">
+        <section className="panel hero">
+          <p className="hero-label">Progres keseluruhan</p>
+          <div className="hero-number" aria-label={`${rataRata} persen`}>
+            {rataRata}
+            <span>%</span>
           </div>
-          <h3>{pad(programs.length)}</h3>
-          <p>Program kerja terdaftar</p>
-        </div>
+          <Meter value={rataRata} label="Progres keseluruhan" />
 
-        <div className="stat-card">
-          <div className="stat-top">
-            <span>Tugas Berjalan</span>
-            <span className="stat-icon orange">☷</span>
-          </div>
-          <h3>{pad(tugasBerjalan)}</h3>
-          <p>Tugas perlu diselesaikan</p>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-top">
-            <span>Kegiatan Mendatang</span>
-            <span className="stat-icon blue">▦</span>
-          </div>
-          <h3>04</h3>
-          <p>Agenda yang akan datang</p>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-top">
-            <span>Progres Keseluruhan</span>
-            <span className="stat-icon green">↗</span>
-          </div>
-          <h3>{rataRata}%</h3>
-          <div className="progress-track">
-            <div className="progress-fill" style={{ width: `${rataRata}%` }} />
-          </div>
-        </div>
-      </section>
-
-      <section className="content-grid">
-        <div className="panel">
-          <div className="panel-header">
+          <dl className="hero-facts">
             <div>
-              <h3>Program Kerja</h3>
-              <p>Pantau perkembangan program kerja organisasi.</p>
+              <dt>Program kerja</dt>
+              <dd>{pad(programs.length)}</dd>
             </div>
-            <button className="text-button" onClick={() => onNavigate('program')}>
-              Lihat semua →
+            <div>
+              <dt>Tugas berjalan</dt>
+              <dd>{pad(tugasBerjalan)}</dd>
+            </div>
+            <div>
+              <dt>Tenggat {JENDELA_HARI} hari</dt>
+              <dd>{pad(tugasMendatang)}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section className="panel home-tasks">
+          <div className="panel-head">
+            <div>
+              <h3>Tugas terbaru</h3>
+              <p>Yang paling baru ditambahkan.</p>
+            </div>
+            <button className="link-btn" onClick={() => onNavigate('tugas')}>
+              Semua <Icon name="arrow" size={15} />
             </button>
           </div>
 
-          {hasil.slice(0, 3).map(({ program: p, progres }, i) => {
-            const tone = toneOf(p.departemen)
-            return (
-              <div className="program-item" key={p.id}>
-                <div className={`program-icon ${tone}`}>{pad(i + 1)}</div>
-                <div className="program-info">
-                  <strong>{p.nama}</strong>
-                  <p>{p.departemen}</p>
-                  <div className="progress-track">
-                    <div
-                      className={`progress-fill ${tone}-fill`}
-                      style={{ width: `${progres}%` }}
-                    />
+          {tugas.length === 0 && <p className="home-empty">Belum ada tugas.</p>}
+
+          <ul className="mini-list">
+            {tugas.slice(0, 4).map((t) => {
+              const telat = !t.selesai && !!t.tenggat && t.tenggat < hariIni
+              const tgl = t.tenggat ? new Date(t.tenggat + 'T00:00:00') : null
+              return (
+                <li key={t.id} className={t.selesai ? 'is-done' : ''}>
+                  <time className={`date-tile${telat ? ' late' : ''}`}>
+                    {tgl ? (
+                      <>
+                        <b>{tgl.getDate()}</b>
+                        <i>{tgl.toLocaleDateString('id-ID', { month: 'short' })}</i>
+                      </>
+                    ) : (
+                      <b>–</b>
+                    )}
+                  </time>
+                  <div className="mini-main">
+                    <strong>{t.nama}</strong>
+                    <p>{namaProgram(t.programId)}</p>
                   </div>
-                </div>
-                <span className={`status status-${tone}`}>{progres}%</span>
-              </div>
-            )
-          })}
-        </div>
+                  <span className={`prio ${prioritasClass[t.prioritas]}`}>{t.prioritas}</span>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
 
-        <div className="panel">
-          <div className="panel-header">
+        <section className="panel home-programs">
+          <div className="panel-head">
             <div>
-              <h3>Tugas Terbaru</h3>
-              <p>Daftar tugas yang perlu diperhatikan.</p>
+              <h3>Program kerja</h3>
+              <p>Pantau perkembangan tiap program.</p>
             </div>
-            <button className="text-button" onClick={() => onNavigate('tugas')}>
-              Lihat semua →
+            <button className="link-btn" onClick={() => onNavigate('program')}>
+              Lihat semua <Icon name="arrow" size={15} />
             </button>
           </div>
 
-          {tugas.length === 0 && <p className="panel-empty">Belum ada tugas.</p>}
+          {hasil.length === 0 && <p className="home-empty">Belum ada program kerja.</p>}
 
-          {tugas.slice(0, 3).map((t) => (
-            <div className="task-item" key={t.id}>
-              <span className={t.selesai ? 'task-check' : 'task-check empty'}>
-                {t.selesai ? '✓' : ''}
-              </span>
-              <div className="task-info">
-                <strong>{t.nama}</strong>
-                <p>{programs.find((p) => p.id === t.programId)?.nama ?? 'Program dihapus'}</p>
-              </div>
-              <span className={`priority ${prioritasClass[t.prioritas]}`}>{t.prioritas}</span>
-            </div>
-          ))}
-        </div>
-      </section>
+          <ol className="prog-list">
+            {hasil.slice(0, 5).map(({ program: p, progres }, i) => {
+              const tone = toneOf(p.departemen)
+              return (
+                <li key={p.id} className={`tone-${tone}`}>
+                  <span className="prog-index">{pad(i + 1)}</span>
+                  <div className="prog-main">
+                    <strong>{p.nama}</strong>
+                    <span className="badge">{p.departemen.replace('Departemen ', '')}</span>
+                  </div>
+                  <div className="prog-meter">
+                    <Meter value={progres} tone={tone} label={`Progres ${p.nama}`} />
+                  </div>
+                  <span className="pct">{progres}%</span>
+                </li>
+              )
+            })}
+          </ol>
+        </section>
+      </div>
     </>
   )
 }

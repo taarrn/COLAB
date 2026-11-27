@@ -1,77 +1,89 @@
-import { daftarAnggota, singkatDivisi } from '../data'
+import { singkatDivisi, toneOf } from '../data'
 import type { Anggota } from '../data'
+import { Avatar, Icon } from './ui'
+import type { IconName } from './ui'
 
-export type Page = 'dashboard' | 'program' | 'tugas' | 'kalender' | 'laporan'
-interface MenuItem {
-  label: string
-  icon: string
-  page?: Page // menu tanpa page berarti halamannya belum dibuat
-}
+export type Page = 'dashboard' | 'program' | 'tugas' | 'kalender' | 'laporan' | 'anggota' | 'pengaturan'
 
-const items: MenuItem[] = [
-  { label: 'Dashboard', icon: '▦', page: 'dashboard' },
-  { label: 'Program Kerja', icon: '▤', page: 'program' },
-  { label: 'Manajemen Tugas', icon: '☷', page: 'tugas' },
-  { label: 'Kalender Kegiatan', icon: '▦', page: 'kalender' },
-  { label: 'Laporan Progres', icon: '▥', page: 'laporan' },
+const items: { label: string; page: Page; icon: IconName }[] = [
+  { label: 'Beranda', page: 'dashboard', icon: 'home' },
+  { label: 'Program', page: 'program', icon: 'folder' },
+  { label: 'Tugas', page: 'tugas', icon: 'check' },
+  { label: 'Kalender', page: 'kalender', icon: 'calendar' },
+  { label: 'Laporan', page: 'laporan', icon: 'chart' },
+  { label: 'Anggota', page: 'anggota', icon: 'users' },
 ]
 
 interface Props {
   page: Page
   onNavigate: (page: Page) => void
-  user: Anggota
-  onChangeUser: (id: number) => void
+  user: Anggota // identitas akun di organisasi aktif
+  namaOrg: string
+  jumlahOrg: number
+  bolehLaporan: boolean
+  menunggu: number // permintaan bergabung yang perlu diputuskan
+  onBukaOrg: () => void
+  onBukaAkun: () => void
 }
 
-export default function Sidebar({ page, onNavigate, user, onChangeUser }: Props) {
+export default function Sidebar({ page, onNavigate, user, namaOrg, jumlahOrg, bolehLaporan, menunggu, onBukaOrg, onBukaAkun }: Props) {
+  const tampil = items.filter((i) => i.page !== 'laporan' || bolehLaporan)
+
   return (
     <aside className="sidebar">
-      <div className="logo">
-        <div className="logo-icon">K</div>
-        <span>KOLAB</span>
+      <div className="traffic" aria-hidden="true">
+        <span />
+        <span />
+        <span />
       </div>
 
-      <div className="menu-label">MENU UTAMA</div>
+      <div className="brand">
+        <div className="brand-mark">K</div>
+        <span className="brand-name">Kolab</span>
+      </div>
 
-      <nav className="menu">
-        {items.map((item) => {
-          const active = item.page === page
+      <button className="org-switch" onClick={onBukaOrg} aria-label="Ganti organisasi">
+        <span className="org-switch-text">
+          <small>Organisasi</small>
+          <strong>{namaOrg}</strong>
+          <em>{user.jabatan ?? 'Anggota'}{user.divisi ? ` · ${singkatDivisi(user.divisi)}` : ''}</em>
+        </span>
+        <span className="org-switch-icon" title={`${jumlahOrg} organisasi`}>
+          <Icon name="swap" size={16} />
+        </span>
+      </button>
+
+      <div className="menu-label">Menu</div>
+
+      <nav className="menu" aria-label="Menu utama">
+        {tampil.map((item) => {
+          const active = item.page === page || (item.page === 'anggota' && page === 'pengaturan')
           return (
             <a
-              key={item.label}
+              key={item.page}
               href="#"
-              className={`menu-item${active ? ' active' : ''}${item.page ? '' : ' soon'}`}
+              className={`menu-item${active ? ' active' : ''}`}
               aria-current={active ? 'page' : undefined}
-              title={item.page ? undefined : 'Segera hadir'}
               onClick={(e) => {
                 e.preventDefault()
-                if (item.page) onNavigate(item.page)
+                onNavigate(item.page)
               }}
             >
-              <span>{item.icon}</span> {item.label}
+              <Icon name={item.icon} size={19} />
+              <span>{item.label}</span>
+              {item.page === 'anggota' && menunggu > 0 && <i className="menu-dot">{menunggu}</i>}
             </a>
           )
         })}
       </nav>
 
-      <div className="sidebar-bottom">
-        <div className="profile-avatar">{user.nama.charAt(0)}</div>
-        <div className="user-info">
-          <label htmlFor="user-select">Masuk sebagai</label>
-          <select
-            id="user-select"
-            value={user.id}
-            onChange={(e) => onChangeUser(Number(e.target.value))}
-          >
-            {daftarAnggota.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.nama}
-              </option>
-            ))}
-          </select>
-          <p>{singkatDivisi(user.divisi)}</p>
-        </div>
-      </div>
+      <button className="sidebar-bottom account-btn" onClick={onBukaAkun} aria-label="Profil dan akun">
+        <Avatar nama={user.nama} tone={toneOf(user.divisi)} size={34} />
+        <span className="user-info">
+          <strong>{user.nama}</strong>
+          <p>Profil dan akun</p>
+        </span>
+      </button>
     </aside>
   )
 }
