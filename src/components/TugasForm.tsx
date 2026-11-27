@@ -34,7 +34,7 @@ export default function TugasForm({
   const [programId, setProgramId] = useState<number>(awalProgramId ?? 0)
   const [nama, setNama] = useState(initial?.nama ?? '')
   const [anggotaId, setAnggotaId] = useState<number>(
-    initial?.anggotaId ?? defaultAnggotaId ?? programs.find((p) => p.id === awalProgramId)?.pjId ?? daftarAnggota[0].id,
+    initial?.anggotaId ?? defaultAnggotaId ?? programs.find((p) => p.id === awalProgramId)?.pjId ?? daftarAnggota()[0]?.id ?? 0,
   )
   const [prioritas, setPrioritas] = useState<Prioritas>(initial?.prioritas ?? 'Sedang')
   const [mulai, setMulai] = useState(initial?.mulai ?? defaultMulai ?? '')
@@ -43,8 +43,8 @@ export default function TugasForm({
   const [error, setError] = useState('')
 
   const program = programs.find((p) => p.id === programId)
-  const anggotaInti = daftarAnggota.filter((a) => a.divisi === program?.departemen)
-  const anggotaLain = daftarAnggota.filter((a) => a.divisi !== program?.departemen)
+  const anggotaInti = daftarAnggota().filter((a) => a.divisi === program?.departemen)
+  const anggotaLain = daftarAnggota().filter((a) => a.divisi !== program?.departemen)
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
@@ -107,17 +107,17 @@ export default function TugasForm({
       <label className="field">
         <span>Ditugaskan ke</span>
         <select value={anggotaId} onChange={(e) => setAnggotaId(Number(e.target.value))}>
-          <optgroup label={`Tim inti (${program ? singkatDivisi(program.departemen) : '-'})`}>
+          <optgroup label={program?.departemen ? `Tim inti (${singkatDivisi(program.departemen)})` : 'Anggota'}>
             {anggotaInti.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.nama}
               </option>
             ))}
           </optgroup>
-          <optgroup label="Divisi lain (bantuan)">
+          <optgroup label="Unit lain (bantuan)">
             {anggotaLain.map((a) => (
               <option key={a.id} value={a.id}>
-                {a.nama} · {singkatDivisi(a.divisi)}
+                {a.nama}{a.divisi ? ` · ${singkatDivisi(a.divisi)}` : ''}
               </option>
             ))}
           </optgroup>

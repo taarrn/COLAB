@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import './LaporanProgres.css'
+import { Avatar, Empty, Icon, Meter, PageHead } from '../components/ui'
 import {
   anggotaById,
   daftarAnggota,
-  departemenList,
+  daftarUnit,
   faseProgram,
   formatTanggal,
   hariIniKey,
@@ -99,32 +100,8 @@ function unduhCsv(baris: BarisProgram[]) {
 }
 
 // Batang progres. "target" menampilkan garis penanda posisi ideal menurut waktu.
-function Bar({
-  progres,
-  tone,
-  label,
-  target,
-}: {
-  progres: number
-  tone: Tone
-  label: string
-  target?: number
-}) {
-  return (
-    <div
-      className="lp-bar"
-      role="progressbar"
-      aria-label={label}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-valuenow={progres}
-    >
-      <div className={`progress-fill ${tone}-fill`} style={{ width: `${progres}%` }} />
-      {target !== undefined && (
-        <span className="lp-tick" style={{ left: `${target}%` }} title={`Target menurut waktu: ${target}%`} />
-      )}
-    </div>
-  )
+function Bar({ progres, tone, label, target }: { progres: number; tone: Tone; label: string; target?: number }) {
+  return <Meter value={progres} tone={tone} label={label} target={target} />
 }
 
 export default function LaporanProgres({ programs, tugas }: Props) {
@@ -177,9 +154,9 @@ export default function LaporanProgres({ programs, tugas }: Props) {
 
   // ---------- Donat status tugas ----------
   const segmen = [
-    { label: 'Selesai', jumlah: tugasSelesai, warna: '#3dbb88', kelas: 'done' },
-    { label: 'Sedang dikerjakan', jumlah: tugasBerjalan, warna: '#7669e8', kelas: 'progress' },
-    { label: 'Terlambat', jumlah: tugasTerlambat, warna: '#e4736f', kelas: 'late' },
+    { label: 'Selesai', jumlah: tugasSelesai, warna: '#2FA079', kelas: 'done' },
+    { label: 'Sedang dikerjakan', jumlah: tugasBerjalan, warna: '#2F80D1', kelas: 'progress' },
+    { label: 'Terlambat', jumlah: tugasTerlambat, warna: '#C4121C', kelas: 'late' },
   ]
   const aktif = segmen.filter((s) => s.jumlah > 0)
   const donat =
@@ -190,10 +167,10 @@ export default function LaporanProgres({ programs, tugas }: Props) {
             return `${s.warna} ${(awal / totalTugas) * 100}% ${((awal + s.jumlah) / totalTugas) * 100}%`
           })
           .join(', ')})`
-      : '#efeff6'
+      : '#EBE3D6'
 
   // ---------- Per departemen ----------
-  const perDept = departemenList
+  const perDept = daftarUnit()
     .map((nama) => {
       const milik = baris.filter((b) => b.program.departemen === nama)
       return {
@@ -219,7 +196,7 @@ export default function LaporanProgres({ programs, tugas }: Props) {
   const namaProgram = (id: number) => programs.find((p) => p.id === id)?.nama ?? 'Program dihapus'
 
   // ---------- Kontribusi anggota ----------
-  const perAnggota = daftarAnggota
+  const perAnggota = daftarAnggota()
     .map((a) => {
       const milik = tugasTampil.filter((t) => t.anggotaId === a.id)
       const selesai = milik.filter((t) => t.selesai).length
@@ -241,124 +218,113 @@ export default function LaporanProgres({ programs, tugas }: Props) {
 
   return (
     <>
-      <header className="topbar lp-topbar">
-        <div>
-          <p className="breadcrumb">Menu Utama / Laporan Progres</p>
-          <h1>Laporan Progres</h1>
-        </div>
+      <PageHead eyebrow="Laporan" title="Laporan Progres" sticker={`${progresKeseluruhan}% selesai`}>
         <div className="lp-actions no-print">
           <button className="btn btn-ghost" onClick={() => unduhCsv(baris)} disabled={baris.length === 0}>
-            Unduh CSV
+            <Icon name="download" size={16} /> Unduh CSV
           </button>
           <button className="btn btn-primary" onClick={() => window.print()}>
-            Cetak laporan
+            <Icon name="print" size={16} /> Cetak laporan
           </button>
         </div>
-      </header>
+      </PageHead>
 
       <div className="toolbar no-print">
-        <div className="tabs" role="tablist">
+        <div className="segmented" role="tablist">
           {(['Semua', ...statusList] as const).map((s) => (
             <button
               key={s}
               role="tab"
               aria-selected={filterStatus === s}
-              className={`tab${filterStatus === s ? ' active' : ''}`}
+              className={`seg${filterStatus === s ? ' active' : ''}`}
               onClick={() => setFilterStatus(s)}
             >
-              {s} <span className="tab-count">{countOf(s)}</span>
+              {s} <span className="seg-count">{countOf(s)}</span>
             </button>
           ))}
         </div>
-        <select
-          className="lp-select"
-          aria-label="Filter departemen"
+        {daftarUnit().length > 0 && <select
+          className="select-pill"
+          aria-label="Filter unit"
           value={filterDept}
           onChange={(e) => setFilterDept(e.target.value)}
         >
-          <option value="semua">Semua departemen</option>
-          {departemenList.map((d) => (
+          <option value="semua">Semua unit</option>
+          {daftarUnit().map((d) => (
             <option key={d} value={d}>
               {d}
             </option>
           ))}
-        </select>
+        </select>}
       </div>
 
       {baris.length === 0 ? (
-        <div className="panel empty-state">
-          <h3>{programs.length === 0 ? 'Belum ada data untuk dilaporkan' : 'Tidak ada program yang cocok'}</h3>
-          <p>
-            {programs.length === 0
+        <Empty
+          title={programs.length === 0 ? 'Belum ada data untuk dilaporkan' : 'Tidak ada program yang cocok'}
+          text={
+            programs.length === 0
               ? 'Tambahkan program kerja dan tugas dulu, laporannya akan muncul di sini.'
-              : 'Coba ubah filter status atau departemen.'}
-          </p>
-        </div>
+              : 'Coba ubah filter status atau departemen.'
+          }
+        />
       ) : (
         <>
-          <section className="lp-hero">
-            <div>
-              <p className="lp-hero-label">RINGKASAN LAPORAN</p>
+          <section className="panel lp-hero">
+            <div className="lp-hero-text">
+              <span className="oval oval-sm">Ringkasan</span>
               <h2>{judul}</h2>
-              <p className="lp-hero-text">
+              <p>
                 Per {formatTanggal(hariIni)}: {tugasSelesai} dari {totalTugas} tugas selesai,{' '}
                 {tugasTerlambat} terlambat, dan {segera} jatuh tempo dalam {SEGERA} hari ke depan.
               </p>
             </div>
             <div className="lp-hero-score">
-              <strong>{progresKeseluruhan}%</strong>
-              <span>Progres keseluruhan</span>
-              <div className="lp-hero-bar">
-                <div style={{ width: `${progresKeseluruhan}%` }} />
+              <div className="lp-score-number" aria-label={`${progresKeseluruhan} persen`}>
+                {progresKeseluruhan}
+                <span>%</span>
               </div>
+              <Meter value={progresKeseluruhan} label="Progres keseluruhan" />
+              <p>progres keseluruhan</p>
             </div>
           </section>
 
-          <section className="stats">
-            <div className="stat-card">
-              <div className="stat-top">
-                <span>Program Kerja</span>
-                <span className="stat-icon purple">▤</span>
-              </div>
-              <h3>{pad(baris.length)}</h3>
-              <p>
+          <section className="lp-stats">
+            <div className="panel stat tone-blue">
+              <span className="stat-icon"><Icon name="folder" size={17} /></span>
+              <p className="stat-label">Program kerja</p>
+              <strong>{pad(baris.length)}</strong>
+              <small>
                 {programSelesai} selesai, {programBerjalan} berjalan
-              </p>
+              </small>
             </div>
 
-            <div className="stat-card">
-              <div className="stat-top">
-                <span>Tugas Selesai</span>
-                <span className="stat-icon green">✓</span>
-              </div>
-              <h3>{pad(tugasSelesai)}</h3>
-              <p>dari {totalTugas} tugas</p>
+            <div className="panel stat tone-mint">
+              <span className="stat-icon"><Icon name="check" size={17} /></span>
+              <p className="stat-label">Tugas selesai</p>
+              <strong>{pad(tugasSelesai)}</strong>
+              <small>dari {totalTugas} tugas</small>
             </div>
 
-            <div className="stat-card">
-              <div className="stat-top">
-                <span>Tugas Terlambat</span>
-                <span className="stat-icon red">!</span>
-              </div>
-              <h3>{pad(tugasTerlambat)}</h3>
-              <p>Lewat tenggat, belum selesai</p>
+            <div className="panel stat tone-red">
+              <span className="stat-icon"><Icon name="alert" size={17} /></span>
+              <p className="stat-label">Tugas terlambat</p>
+              <strong>{pad(tugasTerlambat)}</strong>
+              <small>Lewat tenggat, belum selesai</small>
             </div>
 
-            <div className="stat-card">
-              <div className="stat-top">
-                <span>Perlu Perhatian</span>
-                <span className="stat-icon orange">▲</span>
-              </div>
-              <h3>{pad(perluPerhatian)}</h3>
-              <p>Program tertinggal dari jadwal</p>
+            <div className="panel stat tone-butter">
+              <span className="stat-icon"><Icon name="chart" size={17} /></span>
+              <p className="stat-label">Perlu perhatian</p>
+              <strong>{pad(perluPerhatian)}</strong>
+              <small>Program tertinggal dari jadwal</small>
             </div>
           </section>
 
           <section className="lp-grid lp-grid-a">
-            <div className="panel">
-              <div className="panel-header">
+            <div className="panel lp-card">
+              <div className="panel-head">
                 <div>
-                  <h3>Status Tugas</h3>
+                  <h3>Status tugas</h3>
                   <p>Sebaran tugas berdasarkan kondisinya saat ini.</p>
                 </div>
               </div>
@@ -383,19 +349,19 @@ export default function LaporanProgres({ programs, tugas }: Props) {
               </div>
             </div>
 
-            <div className="panel">
-              <div className="panel-header">
+            <div className="panel lp-card">
+              <div className="panel-head">
                 <div>
-                  <h3>Progres per Departemen</h3>
+                  <h3>Progres per departemen</h3>
                   <p>Rata-rata progres program di tiap departemen.</p>
                 </div>
               </div>
               <div className="lp-dept">
                 {perDept.map((d) => (
-                  <div key={d.nama}>
+                  <div key={d.nama} className={`tone-${d.tone}`}>
                     <div className="lp-row-head">
                       <strong>{singkatDivisi(d.nama)}</strong>
-                      <span className={`status status-${d.tone}`}>{d.progres}%</span>
+                      <span className="pct">{d.progres}%</span>
                     </div>
                     <Bar progres={d.progres} tone={d.tone} label={`Progres ${d.nama}`} />
                     <p className="lp-row-meta">
@@ -407,10 +373,10 @@ export default function LaporanProgres({ programs, tugas }: Props) {
             </div>
           </section>
 
-          <section className="panel lp-section">
-            <div className="panel-header">
+          <section className="panel lp-card lp-section">
+            <div className="panel-head">
               <div>
-                <h3>Rincian per Program</h3>
+                <h3>Rincian per program</h3>
                 <p>Progres tiap program dibandingkan dengan waktu yang sudah berjalan.</p>
               </div>
             </div>
@@ -429,11 +395,11 @@ export default function LaporanProgres({ programs, tugas }: Props) {
                 </thead>
                 <tbody>
                   {baris.map((b) => (
-                    <tr key={b.program.id}>
+                    <tr key={b.program.id} className={`tone-${b.tone}`}>
                       <td>
                         <div className="lp-prog-name">
                           <strong>{b.program.nama}</strong>
-                          <span className={`badge ${b.tone}`}>{singkatDivisi(b.program.departemen)}</span>
+                          <span className="badge">{singkatDivisi(b.program.departemen)}</span>
                         </div>
                       </td>
                       <td>{anggotaById(b.program.pjId).nama}</td>
@@ -453,7 +419,7 @@ export default function LaporanProgres({ programs, tugas }: Props) {
                             label={`Progres ${b.program.nama}`}
                             target={b.fase === 'Berlangsung' && b.status !== 'Selesai' ? b.target : undefined}
                           />
-                          <span className={`status status-${b.tone}`}>{b.progres}%</span>
+                          <span className="pct">{b.progres}%</span>
                         </div>
                       </td>
                       <td>
@@ -472,10 +438,10 @@ export default function LaporanProgres({ programs, tugas }: Props) {
           </section>
 
           <section className="lp-grid lp-grid-b">
-            <div className="panel">
-              <div className="panel-header">
+            <div className="panel lp-card">
+              <div className="panel-head">
                 <div>
-                  <h3>Perlu Perhatian</h3>
+                  <h3>Perlu perhatian</h3>
                   <p>Tugas terlambat dan yang jatuh tempo dalam {SEGERA} hari.</p>
                 </div>
               </div>
@@ -504,10 +470,10 @@ export default function LaporanProgres({ programs, tugas }: Props) {
               )}
             </div>
 
-            <div className="panel">
-              <div className="panel-header">
+            <div className="panel lp-card">
+              <div className="panel-head">
                 <div>
-                  <h3>Kontribusi Anggota</h3>
+                  <h3>Kontribusi anggota</h3>
                   <p>Tugas yang dipegang tiap anggota dan berapa yang sudah selesai.</p>
                 </div>
               </div>
@@ -516,14 +482,14 @@ export default function LaporanProgres({ programs, tugas }: Props) {
               ) : (
                 <ul className="lp-list">
                   {perAnggota.map((m) => (
-                    <li key={m.anggota.id}>
-                      <span className={`lp-avatar ${toneOf(m.anggota.divisi)}`}>{m.anggota.nama.charAt(0)}</span>
+                    <li key={m.anggota.id} className={`tone-${toneOf(m.anggota.divisi)}`}>
+                      <Avatar nama={m.anggota.nama} tone={toneOf(m.anggota.divisi)} size={34} />
                       <div className="lp-item-main">
                         <strong>
                           {m.anggota.nama}
                           {m.terlambat > 0 && <span className="lp-pill bad lp-pill-sm">{m.terlambat} terlambat</span>}
                         </strong>
-                        <p>{singkatDivisi(m.anggota.divisi)}</p>
+                        <p>{m.anggota.divisi ? singkatDivisi(m.anggota.divisi) : m.anggota.jabatan}</p>
                       </div>
                       <div className="lp-member-progress">
                         <Bar progres={m.progres} tone={toneOf(m.anggota.divisi)} label={`Progres ${m.anggota.nama}`} />

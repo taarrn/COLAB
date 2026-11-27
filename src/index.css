@@ -1,29 +1,231 @@
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+/* =========================================================
+   KOLAB, fondasi visual
+   Langit biru, merah poster, lilac, krem. Judul serif lembut,
+   isi pakai font sistem (SF Pro di Mac).
+   ========================================================= */
 
 :root {
-  font-family: Inter, "Segoe UI", sans-serif;
-  color: #24243b;
-  background: #f7f8fc;
+  /* langit */
+  --sky-50: #f3fbff;
+  --sky-100: #e4f6fd;
+  --sky-200: #cfeefb;
+  --sky-300: #b0e2f6;
+
+  /* merah poster */
+  --red: #c4121c;
+  --red-deep: #9e0d16;
+  --red-soft: #fbe4e2;
+  --red-line: rgba(196, 18, 28, 0.3);
+
+  /* lilac, krem */
+  --lilac: #e3cff8;
+  --lilac-ink: #5e3499;
+  --cream: #f6f1e9;
+  --cream-deep: #ebe3d6;
+
+  /* teks */
+  --ink: #2a1416;
+  --ink-2: #4b3033;
+  --muted: #7a5e62;
+  --faint: #a58e91;
+
+  /* garis dan permukaan */
+  --hair: rgba(122, 18, 26, 0.12);
+  --hair-strong: rgba(122, 18, 26, 0.22);
+  --surface: rgba(255, 255, 255, 0.74);
+  --surface-solid: #fffdfb;
+
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+
+  --shadow-1: 0 1px 2px rgba(60, 20, 25, 0.05), 0 8px 22px -10px rgba(60, 20, 25, 0.12);
+  --shadow-2: 0 2px 4px rgba(60, 20, 25, 0.06), 0 22px 44px -16px rgba(60, 20, 25, 0.26);
+
+  --f-display: 'Fraunces', 'Cooper Black', 'Iowan Old Style', Georgia, serif;
+  --f-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Segoe UI', system-ui, sans-serif;
+
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  font-family: var(--f-body);
+  color: var(--ink);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-* {
-  box-sizing: border-box;
-}
+/* Satu warna per departemen: --t solid, --t-soft latar, --t-ink teks di atas latar */
+.tone-red { --t: #c4121c; --t-soft: #fbe4e2; --t-ink: #9e0d16; }
+.tone-blue { --t: #2f80d1; --t-soft: #dcebfa; --t-ink: #1d5698; }
+.tone-lilac { --t: #9b6bdb; --t-soft: #ebdcfa; --t-ink: #5e3499; }
+.tone-butter { --t: #e8a91a; --t-soft: #fcefc4; --t-ink: #7a5200; }
+.tone-mint { --t: #2fa079; --t-soft: #d3f0e2; --t-ink: #17694a; }
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+  background: var(--sky-200);
+  color: var(--ink);
 }
 
-button,
-input,
+/* Langit: gradasi biru muda dan awan bertekstur seperti poster */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='900' height='700'><filter id='n' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='0.0045 0.009' numOctaves='4' seed='7'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 2.1 -0.82'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>") center / cover,
+    radial-gradient(70% 50% at 12% 4%, rgba(255, 255, 255, 0.85), transparent 70%),
+    radial-gradient(60% 45% at 92% 18%, rgba(255, 255, 255, 0.6), transparent 70%),
+    linear-gradient(180deg, #c3ebfa 0%, #d8f3fc 55%, #c9eefb 100%);
+}
+
+h1, h2, h3, h4, p { margin: 0; }
+
+h1, h2, h3 {
+  font-family: var(--f-display);
+  font-weight: 650;
+  font-variation-settings: 'SOFT' 30;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: inherit; }
+
+::selection { background: var(--lilac); color: var(--red-deep); }
+
+:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+
+* { scrollbar-width: thin; scrollbar-color: rgba(122, 18, 26, 0.22) transparent; }
+
+/* =========================================================
+   Tombol
+   ========================================================= */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  white-space: nowrap;
+  transition: background 0.16s var(--ease), box-shadow 0.16s var(--ease), transform 0.16s var(--ease),
+    border-color 0.16s var(--ease);
+}
+.btn:active:not(:disabled) { transform: scale(0.97); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn-primary {
+  background: var(--red);
+  color: #fff7f1;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset, 0 6px 14px -6px rgba(196, 18, 28, 0.7);
+}
+.btn-primary:hover:not(:disabled) { background: var(--red-deep); }
+
+.btn-ghost {
+  background: var(--cream);
+  color: var(--ink);
+  border-color: var(--hair-strong);
+}
+.btn-ghost:hover:not(:disabled) { background: #fff; border-color: var(--red-line); }
+
+.btn-danger {
+  background: transparent;
+  color: var(--red);
+  border-color: var(--red-line);
+}
+.btn-danger:hover:not(:disabled) { background: var(--red-soft); border-color: var(--red); }
+
+.btn-small { height: 30px; padding: 0 12px; font-size: 12px; }
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  transition: background 0.16s var(--ease), color 0.16s var(--ease);
+}
+.icon-btn:hover { background: rgba(122, 18, 26, 0.08); color: var(--ink); }
+.icon-btn.danger:hover { background: var(--red-soft); color: var(--red); }
+
+/* =========================================================
+   Formulir
+   ========================================================= */
+
+.form { display: grid; gap: 16px; }
+.field { display: grid; gap: 6px; min-width: 0; }
+.field > span { font-size: 12px; font-weight: 600; color: var(--ink-2); }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+input:not([type='checkbox']),
 select,
 textarea {
-  font: inherit;
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid var(--hair-strong);
+  border-radius: var(--r-sm);
+  background: #fff;
+  font-size: 14px;
+  transition: border-color 0.16s, box-shadow 0.16s;
+}
+textarea { resize: vertical; min-height: 84px; line-height: 1.5; }
+input::placeholder, textarea::placeholder { color: var(--faint); }
+
+input:not([type='checkbox']):focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--red);
+  box-shadow: 0 0 0 3.5px rgba(196, 18, 28, 0.16);
+}
+input:disabled, select:disabled { background: var(--cream); color: var(--muted); cursor: not-allowed; }
+
+select {
+  appearance: none;
+  padding-right: 34px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M3 4.5 6 7.5 9 4.5' fill='none' stroke='%237a5e62' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+.form-error {
+  padding: 10px 14px;
+  border-radius: var(--r-sm);
+  background: var(--red-soft);
+  color: var(--red-deep);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.form-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 6px; }
+
+@media (max-width: 560px) {
+  .field-row { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
 }

@@ -1,23 +1,29 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { daftarAnggota, departemenList, singkatDivisi } from '../data'
+import { daftarAnggota, singkatDivisi } from '../data'
 import type { Program } from '../data'
 
 type FormData = Omit<Program, 'id'>
 
 interface Props {
   initial?: Program // diisi saat mengedit program
+  units: string[] // unit yang boleh dipilih pembuat
+  labelUnit: string
   onSubmit: (data: FormData) => void
   onCancel: () => void
 }
 
-export default function ProgramForm({ initial, onSubmit, onCancel }: Props) {
+export default function ProgramForm({ initial, units, labelUnit, onSubmit, onCancel }: Props) {
+  const anggota = daftarAnggota()
+  const terkunci = !!initial && !!initial.departemen && !units.includes(initial.departemen)
+  const pilihan = terkunci ? [initial!.departemen] : units
   const [nama, setNama] = useState(initial?.nama ?? '')
-  const [departemen, setDepartemen] = useState(initial?.departemen ?? departemenList[0])
+  const [departemen, setDepartemen] = useState(initial?.departemen ?? pilihan[0] ?? '')
   const [pjId, setPjId] = useState(
     initial?.pjId ??
-      daftarAnggota.find((a) => a.divisi === departemenList[0])?.id ??
-      daftarAnggota[0].id,
+      anggota.find((a) => a.divisi === (pilihan[0] ?? ''))?.id ??
+      anggota[0]?.id ??
+      0,
   )
   const [mulai, setMulai] = useState(initial?.mulai ?? '')
   const [selesai, setSelesai] = useState(initial?.selesai ?? '')
@@ -34,6 +40,7 @@ export default function ProgramForm({ initial, onSubmit, onCancel }: Props) {
     }
 
     onSubmit({
+      orgId: initial?.orgId ?? '',
       nama: nama.trim(),
       departemen,
       pjId,
@@ -56,21 +63,23 @@ export default function ProgramForm({ initial, onSubmit, onCancel }: Props) {
       </label>
 
       <div className="field-row">
-        <label className="field">
-          <span>Departemen</span>
-          <select value={departemen} onChange={(e) => setDepartemen(e.target.value)}>
-            {departemenList.map((d) => (
-              <option key={d}>{d}</option>
-            ))}
-          </select>
-        </label>
+        {pilihan.length > 0 && (
+          <label className="field">
+            <span>{labelUnit}</span>
+            <select value={departemen} disabled={terkunci} onChange={(e) => setDepartemen(e.target.value)}>
+              {pilihan.map((d) => (
+                <option key={d}>{d}</option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <label className="field">
           <span>Penanggung jawab</span>
           <select value={pjId} onChange={(e) => setPjId(Number(e.target.value))}>
-            {daftarAnggota.map((a) => (
+            {anggota.map((a) => (
               <option key={a.id} value={a.id}>
-                {a.nama} · {singkatDivisi(a.divisi)}
+                {a.nama}{a.divisi ? ` · ${singkatDivisi(a.divisi)}` : ''}
               </option>
             ))}
           </select>

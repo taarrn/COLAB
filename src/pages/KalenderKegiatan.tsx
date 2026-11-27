@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import './KalenderKegiatan.css'
 import TugasForm from '../components/TugasForm'
+import { Icon, Modal, PageHead } from '../components/ui'
 import {
   anggotaById,
   faseProgram,
@@ -10,12 +11,14 @@ import {
   rentangTugas,
   toneOf,
 } from '../data'
-import type { Anggota, Program, Tugas, TugasInput } from '../data'
+import type { Anggota, Program, Tone, Tugas, TugasInput } from '../data'
+import type { Akses } from '../org'
 
 interface Props {
   programs: Program[]
   tugas: Tugas[]
   user: Anggota
+  akses: Akses
   onAddTugas: (data: TugasInput) => void
   onToggleTugas: (id: number) => void
 }
@@ -26,7 +29,7 @@ const namaBulan = [
 ]
 const hari = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
 
-export default function KalenderKegiatan({ programs, tugas, user, onAddTugas, onToggleTugas }: Props) {
+export default function KalenderKegiatan({ programs, tugas, akses, onAddTugas, onToggleTugas }: Props) {
   const hariIni = hariIniKey()
   const sekarang = new Date()
   const [bulan, setBulan] = useState(sekarang.getMonth())
@@ -35,26 +38,14 @@ export default function KalenderKegiatan({ programs, tugas, user, onAddTugas, on
   const [showForm, setShowForm] = useState(false)
   const [popup, setPopup] = useState(false) // popup agenda saat tanggal diklik
 
-  useEffect(() => {
-    if (!showForm && !popup) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return
-      setShowForm(false)
-      setPopup(false)
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [showForm, popup])
-
   // Hanya PJ program yang boleh menambah tugas ke kalender
-  const programSaya = programs.filter((p) => p.pjId === user.id)
-  const adalahPj = (programId: number) => programSaya.some((p) => p.id === programId)
-  const bolehDone = (t: Tugas) => t.anggotaId === user.id || adalahPj(t.programId)
+  const programSaya = programs.filter((p) => akses.kelolaTugas(p))
+  const bolehDone = (t: Tugas) => akses.tandaiTugas(t.anggotaId, programs.find((p) => p.id === t.programId))
 
   const namaProgram = (id: number) => programs.find((p) => p.id === id)?.nama ?? 'Program dihapus'
-  const toneTugas = (t: Tugas) => {
+  const toneTugas = (t: Tugas): Tone => {
     const p = programs.find((x) => x.id === t.programId)
-    return p ? toneOf(p.departemen) : 'purple'
+    return p ? toneOf(p.departemen) : 'lilac'
   }
 
   // Semua tugas yang punya tanggal, lengkap dengan rentang tampilnya
@@ -100,7 +91,7 @@ export default function KalenderKegiatan({ programs, tugas, user, onAddTugas, on
     <>
       {programDipilih.length === 0 && tugasDipilih.length === 0 && (
         <div className="agenda-empty">
-          <span>▦</span>
+          <Icon name="calendar" size={26} />
           <strong>Tidak ada agenda</strong>
           <p>Tidak ada program atau tugas pada tanggal ini.</p>
         </div>
@@ -114,9 +105,9 @@ export default function KalenderKegiatan({ programs, tugas, user, onAddTugas, on
             const label =
               dipilih === p.mulai ? 'Dimulai hari ini' : dipilih === p.selesai ? 'Berakhir hari ini' : 'Berlangsung'
             return (
-              <div className="agenda-card" key={p.id}>
-                <span className={`agenda-stripe ${toneOf(p.departemen)}`} />
-                <div>
+              <div className={`agenda-card tone-${toneOf(p.departemen)}`} key={p.id}>
+                <span className="agenda-stripe" />
+                <div className="agenda-body">
                   <strong>{p.nama}</strong>
                   <small>
                     {formatTanggal(p.mulai)} – {formatTanggal(p.selesai)}
@@ -138,9 +129,9 @@ export default function KalenderKegiatan({ programs, tugas, user, onAddTugas, on
           {tugasDipilih.map(({ t, awal }) => {
             const telat = !t.selesai && hariIni > (t.tenggat || awal)
             return (
-              <div className={`agenda-card${t.selesai ? ' selesai' : ''}`} key={t.id}>
-                <span className={`agenda-stripe ${toneTugas(t)}`} />
-                <div className="agenda-card-body">
+              <div className={`agenda-card tone-${toneTugas(t)}${t.selesai ? ' selesai' : ''}`} key={t.id}>
+                <span className="agenda-stripe" />
+                <div className="agenda-body">
                   <strong>{t.nama}</strong>
                   <small>
                     {t.mulai ? `${formatTanggal(t.mulai)} – ` : 'Tenggat '}
@@ -155,9 +146,9 @@ export default function KalenderKegiatan({ programs, tugas, user, onAddTugas, on
                   className={`btn-done${t.selesai ? ' sudah' : ''}`}
                   onClick={() => onToggleTugas(t.id)}
                   disabled={!bolehDone(t)}
-                  title={bolehDone(t) ? undefined : 'Hanya yang ditugaskan atau PJ yang bisa menandai'}
+                  title={bolehDone(t) ? undefined : 'Hanya yang ditugaskan atau pengurus berwenang yang bisa menandai'}
                 >
-                  {t.selesai ? '✓ Selesai' : 'Done'}
+                  {t.selesai ? 'Selesai' : 'Done'}
                 </button>
               </div>
             )
@@ -168,35 +159,35 @@ export default function KalenderKegiatan({ programs, tugas, user, onAddTugas, on
   )
 
   return (
-    <div className="kalender-page">
-      <header className="kalender-header">
-        <div>
-          <p className="kalender-breadcrumb">Menu Utama / Kalender Kegiatan</p>
-          <h1>Kalender Kegiatan</h1>
-          <p className="kalender-subtitle">
-            Jadwal program kerja dan tugas tim dalam satu kalender.
-          </p>
-        </div>
+    <>
+      <PageHead eyebrow="Kalender" title="Kalender Kegiatan" sticker={`${tugasBulanIni} tugas bulan ini`}>
         <button
-          className="kalender-add"
+          className="btn btn-primary"
           onClick={() => setShowForm(true)}
           disabled={programSaya.length === 0}
-          title={programSaya.length === 0 ? 'Hanya penanggung jawab program yang bisa menambah tugas' : undefined}
+          title={programSaya.length === 0 ? 'Kamu belum punya wewenang membagi tugas di program mana pun' : undefined}
         >
-          + Tambah Tugas
+          <Icon name="plus" size={16} /> Tambah tugas
         </button>
-      </header>
+      </PageHead>
 
-      <section className="kalender-layout">
-        <div className="kalender-card">
-          <div className="kalender-month-header">
+      <section className="cal-layout">
+        <div className="panel cal">
+          <div className="cal-head">
             <div>
-              <h2>{namaBulan[bulan]} {tahun}</h2>
-              <p>{programBulanIni} program · {tugasBulanIni} tugas bulan ini</p>
+              <h2>
+                {namaBulan[bulan]} <span>{tahun}</span>
+              </h2>
+              <p>
+                {programBulanIni} program · {tugasBulanIni} tugas bulan ini
+              </p>
             </div>
-            <div className="kalender-navigation">
-              <button aria-label="Bulan sebelumnya" onClick={() => ubahBulan(-1)}>‹</button>
+            <div className="cal-nav">
+              <button className="icon-btn" aria-label="Bulan sebelumnya" onClick={() => ubahBulan(-1)}>
+                <Icon name="left" size={18} />
+              </button>
               <button
+                className="btn btn-ghost btn-small"
                 onClick={() => {
                   setBulan(sekarang.getMonth())
                   setTahun(sekarang.getFullYear())
@@ -205,53 +196,55 @@ export default function KalenderKegiatan({ programs, tugas, user, onAddTugas, on
               >
                 Hari ini
               </button>
-              <button aria-label="Bulan berikutnya" onClick={() => ubahBulan(1)}>›</button>
+              <button className="icon-btn" aria-label="Bulan berikutnya" onClick={() => ubahBulan(1)}>
+                <Icon name="right" size={18} />
+              </button>
             </div>
           </div>
 
-          <div className="kalender-legend">
+          <div className="cal-legend">
             <span><i className="lg-program" /> Program kerja</span>
             <span><i className="lg-tugas" /> Tugas</span>
             <span><i className="lg-done" /> Selesai</span>
             <span><i className="lg-late" /> Terlambat</span>
           </div>
 
-          <div className="kalender-grid">
+          <div className="cal-grid">
             {hari.map((n) => (
-              <div className="kalender-weekday" key={n}>{n}</div>
+              <div className="cal-weekday" key={n}>{n}</div>
             ))}
 
             {grid.map((n, i) => {
-              if (n === null) return <div className="kalender-day kosong" key={`k-${i}`} />
+              if (n === null) return <div className="cal-day kosong" key={`k-${i}`} />
               const key = keyHari(n)
               const progs = programPadaTanggal(key)
               const tgs = tugasPadaTanggal(key)
-              // Maksimal 3 baris di sel, sisanya diringkas "+N lagi"
+              // Program tampil sebagai garis tipis, tugas maksimal 2 baris, sisanya "+N lagi"
+              const tampilTugas = tgs.slice(0, 2)
               const baris = [
                 ...progs.map((p) => ({ k: `p${p.id}`, jenis: 'program' as const, p })),
-                ...tgs.map((x) => ({ k: `t${x.t.id}`, jenis: 'tugas' as const, x })),
+                ...tampilTugas.map((x) => ({ k: `t${x.t.id}`, jenis: 'tugas' as const, x })),
               ]
               return (
                 <button
                   key={key}
-                  className={`kalender-day${dipilih === key ? ' dipilih' : ''}`}
+                  className={`cal-day${dipilih === key ? ' dipilih' : ''}`}
                   onClick={() => {
                     setDipilih(key)
                     setPopup(true)
                   }}
                 >
-                  <span className={`kalender-date${key === hariIni ? ' hari-ini' : ''}`}>{n}</span>
-                  {baris.slice(0, 3).map((b) => {
+                  <span className={`cal-date${key === hariIni ? ' hari-ini' : ''}`}>{n}</span>
+                  {baris.map((b) => {
                     if (b.jenis === 'program') {
                       const awal = key === b.p.mulai
                       const akhir = key === b.p.selesai
                       return (
                         <span
                           key={b.k}
-                          className={`kal-bar ${toneOf(b.p.departemen)}${awal ? ' awal' : ''}${akhir ? ' akhir' : ''}`}
+                          className={`cal-bar tone-${toneOf(b.p.departemen)}${awal ? ' awal' : ''}${akhir ? ' akhir' : ''}`}
                           title={b.p.nama}
                         >
-                          {awal ? b.p.nama : akhir ? 'Berakhir' : '\u00A0'}
                         </span>
                       )
                     }
@@ -259,26 +252,24 @@ export default function KalenderKegiatan({ programs, tugas, user, onAddTugas, on
                     return (
                       <span
                         key={b.k}
-                        className={`kal-chip${b.x.t.selesai ? ' done' : ''}${telat ? ' late' : ''}`}
+                        className={`cal-chip${b.x.t.selesai ? ' done' : ''}${telat ? ' late' : ''}`}
                         title={b.x.t.nama}
                       >
                         {b.x.t.nama}
                       </span>
                     )
                   })}
-                  {baris.length > 3 && <span className="kalender-more">+{baris.length - 3} lagi</span>}
+                  {tgs.length > 2 && <span className="cal-more">+{tgs.length - 2} lagi</span>}
                 </button>
               )
             })}
           </div>
         </div>
 
-        <aside className="kalender-card kalender-agenda">
+        <aside className="panel agenda">
           <div className="agenda-heading">
-            <div>
-              <h2>Agenda</h2>
-              <p>{formatTanggal(dipilih)}</p>
-            </div>
+            <span className="oval oval-sm">Agenda</span>
+            <h2>{formatTanggal(dipilih)}</h2>
           </div>
 
           {isiAgenda}
@@ -286,71 +277,45 @@ export default function KalenderKegiatan({ programs, tugas, user, onAddTugas, on
       </section>
 
       {popup && (
-        <div className="kalender-overlay" onMouseDown={() => setPopup(false)}>
-          <section
-            className="kalender-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="popup-title"
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            <div className="modal-heading">
-              <div>
-                <span className="detail-label">AGENDA</span>
-                <h2 id="popup-title">{formatTanggal(dipilih)}</h2>
-              </div>
-              <button className="modal-close" onClick={() => setPopup(false)}>×</button>
-            </div>
+        <Modal title={formatTanggal(dipilih)} eyebrow="Agenda" onClose={() => setPopup(false)}>
+          {isiAgenda}
 
-            {isiAgenda}
-
-            <div className="form-actions">
-              <button className="btn-batal" onClick={() => setPopup(false)}>Tutup</button>
-              {programSaya.length > 0 && (
-                <button
-                  className="kalender-add"
-                  onClick={() => {
-                    setPopup(false)
-                    setShowForm(true)
-                  }}
-                >
-                  + Tambah Tugas
-                </button>
-              )}
-            </div>
-          </section>
-        </div>
+          <div className="form-actions">
+            <button className="btn btn-ghost" onClick={() => setPopup(false)}>Tutup</button>
+            {programSaya.length > 0 && (
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  setPopup(false)
+                  setShowForm(true)
+                }}
+              >
+                <Icon name="plus" size={16} /> Tambah tugas
+              </button>
+            )}
+          </div>
+        </Modal>
       )}
 
       {showForm && programSaya.length > 0 && (
-        <div className="kalender-overlay" onMouseDown={() => setShowForm(false)}>
-          <section
-            className="kalender-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="tugas-title"
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            <div className="modal-heading">
-              <div>
-                <h2 id="tugas-title">Tambah Tugas</h2>
-                <p>Tugas akan tampil di kalender dan tidak berakhir sebelum ditandai selesai.</p>
-              </div>
-              <button className="modal-close" onClick={() => setShowForm(false)}>×</button>
-            </div>
-            <TugasForm
-              programs={programSaya}
-              defaultMulai={dipilih}
-              defaultTenggat={dipilih}
-              onCancel={() => setShowForm(false)}
-              onSubmit={(data) => {
-                onAddTugas(data)
-                setShowForm(false)
-              }}
-            />
-          </section>
-        </div>
+        <Modal
+          title="Tambah tugas"
+          eyebrow="Tugas baru"
+          subtitle="Tugas akan tampil di kalender dan tidak berakhir sebelum ditandai selesai."
+          onClose={() => setShowForm(false)}
+        >
+          <TugasForm
+            programs={programSaya}
+            defaultMulai={dipilih}
+            defaultTenggat={dipilih}
+            onCancel={() => setShowForm(false)}
+            onSubmit={(data) => {
+              onAddTugas(data)
+              setShowForm(false)
+            }}
+          />
+        </Modal>
       )}
-    </div>
+    </>
   )
 }
